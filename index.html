@@ -15,6 +15,7 @@
 <body>
   <header>
     <h1>VoixTexte</h1>
+    <button id="history" class="tool small" title="Enregistrements" aria-label="Enregistrements">📚</button>
     <select id="lang" aria-label="Langue">
       <option value="fr-FR">Français</option>
       <option value="en-US">English (US)</option>
@@ -33,12 +34,13 @@
   </div>
 
   <main>
-    <div id="status" class="status">Prêt</div>
+    <div class="statusbar"><span id="status" class="status">Prêt</span><span id="saved" class="saved"></span></div>
+    <h2 id="title" class="rec-title"></h2>
     <div id="transcript" class="transcript" aria-live="polite"><p id="placeholder" class="placeholder">Appuyez sur le micro pour commencer la transcription.</p><span id="final"></span><span id="interim"></span></div>
   </main>
 
   <footer>
-    <button id="clear" class="tool" title="Effacer" aria-label="Effacer">🗑️</button>
+    <button id="new" class="tool" title="Nouvel enregistrement" aria-label="Nouvel enregistrement">➕</button>
     <button id="copy" class="tool" title="Copier" aria-label="Copier">📋</button>
     <button id="mic" class="mic" aria-label="Démarrer la transcription" aria-pressed="false">
       <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
@@ -46,6 +48,15 @@
     <button id="share" class="tool" title="Partager" aria-label="Partager">📤</button>
     <button id="download" class="tool" title="Télécharger (.txt)" aria-label="Télécharger">💾</button>
   </footer>
+
+  <dialog id="historyDialog">
+    <div class="dialog-head">
+      <h2>Enregistrements</h2>
+      <button id="closeHistory" class="tool small" aria-label="Fermer">✕</button>
+    </div>
+    <label class="opt"><input type="checkbox" id="stamps"> Horodater les phrases dans les exports</label>
+    <ul id="historyList" class="history-list"></ul>
+  </dialog>
 
   <script src="app.js"></script>
 </body>

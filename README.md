@@ -8,7 +8,12 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
 - Écoute continue : relance automatique après les silences.
 - Plusieurs langues (français par défaut, anglais, espagnol, allemand, italien, portugais, breton…).
 - Copier, partager (menu de partage du téléphone) ou télécharger le texte en `.txt`.
-- Le texte est conservé sur l'appareil même si vous fermez l'appli.
+- **Enregistrement au fil de la voix** : chaque phrase reconnue est sauvegardée sur l'appareil
+  dès qu'elle est validée, avec son heure. Rien n'est perdu si l'appli se ferme ou si le
+  téléphone s'éteint.
+- **Historique** (📚) : ➕ démarre un nouvel enregistrement, les précédents restent consultables,
+  réouvrables (pour continuer à dicter dedans) ou supprimables.
+- Export horodaté en option : `[14:32:05] Bonjour à tous`.
 - L'écran reste allumé pendant l'écoute.
 - Installable sur l'écran d'accueil, thème clair/sombre automatique.
 

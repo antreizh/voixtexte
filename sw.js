@@ -1,4 +1,4 @@
-const CACHE = 'voixtexte-v1';
+const CACHE = 'voixtexte-v2';
 const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'icon.svg', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
