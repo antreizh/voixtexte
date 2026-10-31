@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6feb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="Transcription audio en texte, en temps réel, depuis le micro du smartphone.">
+  <title>VoixTexte</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>VoixTexte</h1>
+    <button id="history" class="tool small" title="Enregistrements" aria-label="Enregistrements">📚</button>
+    <select id="lang" aria-label="Langue">
+      <option value="fr-FR">Français</option>
+      <option value="en-US">English (US)</option>
+      <option value="en-GB">English (UK)</option>
+      <option value="es-ES">Español</option>
+      <option value="de-DE">Deutsch</option>
+      <option value="it-IT">Italiano</option>
+      <option value="pt-PT">Português</option>
+      <option value="br-FR">Brezhoneg</option>
+    </select>
+  </header>
+
+  <div id="unsupported" class="banner" hidden>
+    Votre navigateur ne prend pas en charge la reconnaissance vocale.
+    Utilisez <strong>Chrome</strong> sur Android ou <strong>Safari</strong> sur iPhone.
+  </div>
+
+  <main>
+    <div class="statusbar"><span id="status" class="status">Prêt</span><span id="saved" class="saved"></span></div>
+    <h2 id="title" class="rec-title"></h2>
+    <div id="transcript" class="transcript" aria-live="polite"><p id="placeholder" class="placeholder">Appuyez sur le micro pour commencer la transcription.</p><span id="final"></span><span id="interim"></span></div>
+  </main>
+
+  <footer>
+    <button id="new" class="tool" title="Nouvel enregistrement" aria-label="Nouvel enregistrement">➕</button>
+    <button id="copy" class="tool" title="Copier" aria-label="Copier">📋</button>
+    <button id="mic" class="mic" aria-label="Démarrer la transcription" aria-pressed="false">
+      <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
+    </button>
+    <button id="share" class="tool" title="Partager" aria-label="Partager">📤</button>
+    <button id="download" class="tool" title="Télécharger (.txt)" aria-label="Télécharger">💾</button>
+  </footer>
+
+  <dialog id="historyDialog">
+    <div class="dialog-head">
+      <h2>Enregistrements</h2>
+      <button id="closeHistory" class="tool small" aria-label="Fermer">✕</button>
+    </div>
+    <label class="opt"><input type="checkbox" id="stamps"> Horodater les phrases dans les exports</label>
+    <ul id="historyList" class="history-list"></ul>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
