@@ -67,7 +67,7 @@ function formatTime(ms) {
   const d = new Date(ms);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
-// jjmmaaaa_hhmmss : base des noms de fichiers (Enr_… et cr_…)
+// jjmmaaaa_hhmmss : base des noms de fichiers (enr_… et cr_…)
 function formatStamp(ms) {
   const d = new Date(ms);
   return `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;

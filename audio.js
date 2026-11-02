@@ -4,7 +4,7 @@
  * Enregistrement audio de VTS.
  *  - Le son du micro est enregistré (MediaRecorder) et sauvegardé sur l'appareil (IndexedDB),
  *    par morceaux de 5 s : une coupure (batterie, appli fermée) ne fait perdre que quelques secondes.
- *  - Fichier nommé « Enr_hh:mn:ss » d'après l'heure de début, exportable dans le téléphone.
+ *  - Fichier nommé « enr_jjmmaaaa_hhmmss » d'après l'heure de début, exportable dans le téléphone.
  *  - Sur demande : retranscription du fichier en texte (moteur vocal du navigateur, alimenté
  *    par le son du fichier), puis compte-rendu.
  */
@@ -114,7 +114,7 @@ const VTAudio = (() => {
     const mime = pickMime();
     const meta = {
       id: 'a' + startMs.toString(36),
-      name: 'Enr_' + VT.formatStamp(startMs), // Enr_jjmmaaaa_hhmmss
+      name: 'enr_' + VT.formatStamp(startMs), // enr_jjmmaaaa_hhmmss
       start: startMs, mime: mime || 'audio/webm', duration: 0, size: 0, status: 'recording',
     };
     target.start = startMs;

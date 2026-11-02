@@ -33,8 +33,8 @@ Choisissez **« ⏺️ Enregistrement audio »** au-dessus du texte, puis appuye
 
 - Le son est sauvegardé sur l'appareil **toutes les 5 secondes** : si l'appli est fermée ou le
   téléphone s'éteint, l'enregistrement est récupéré à la prochaine ouverture.
-- Le fichier est nommé d'après la date et l'heure de début : **`Enr_jjmmaaaa_hhmmss`**
-  (ex. `Enr_02112026_143205.webm` pour un enregistrement lancé le 2 novembre 2026 à 14 h 32 min 05 s).
+- Le fichier est nommé d'après la date et l'heure de début : **`enr_jjmmaaaa_hhmmss`**
+  (ex. `enr_02112026_143205.webm` pour un enregistrement lancé le 2 novembre 2026 à 14 h 32 min 05 s).
 - À la fin, l'appli propose de **retranscrire** le fichier en texte (la relecture dure à peu près
   la durée de l'enregistrement), puis de créer le **compte-rendu**. Les mots-clés (« Point
   suivant », « Décision », « Action »…) prononcés pendant l'enregistrement sont reconnus.
