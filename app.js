@@ -294,8 +294,7 @@ function mask() {
   els.maskBtn.hidden = true;
   themeMeta.content = '#000000';
   document.body.classList.add('masked');
-  const fs = document.documentElement.requestFullscreen;
-  if (fs && !document.fullscreenElement) fs.call(document.documentElement).catch(() => {});
+  // Pas de plein écran : Android afficherait sa bulle « balayez pour quitter le plein écran ».
 }
 
 function unmask() {
@@ -310,15 +309,11 @@ function unmask() {
 const isBusy = () => listening || Boolean(audioApi() && audioApi().isRecording());
 els.unmask.addEventListener('click', unmask);
 
-// Coin gauche : retour à l'écran d'accueil du téléphone sans arrêter l'enregistrement.
-// Une page web ne peut pas déclencher elle-même le bouton Accueil : on l'indique, et
-// l'enregistrement continue quand l'appli passe en arrière-plan.
-els.homeCorner = $('homeCorner');
-els.homeHint = $('homeHint');
-els.homeCorner.addEventListener('click', () => {
-  els.homeHint.hidden = false;
-  clearTimeout(els.homeHint._t);
-  els.homeHint._t = setTimeout(() => { els.homeHint.hidden = true; }, 4000);
+// Coin gauche : repère pour quitter l'appli vers l'accueil du téléphone sans arrêter
+// l'enregistrement (une page web ne peut pas actionner elle-même le bouton Accueil).
+// Aucun texte sur l'écran noir : simple vibration de confirmation.
+$('homeCorner').addEventListener('click', () => {
+  if (navigator.vibrate) navigator.vibrate(30);
 });
 els.maskBtn.addEventListener('click', mask);
 // Une sortie du plein écran (geste système, bouton retour) réaffiche aussi l'appli.

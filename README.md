@@ -23,7 +23,8 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
   remasque. Désactivable dans ⚙️ Réglages.
 - **Coin gris en bas à gauche** : pour aller à l'écran d'accueil du téléphone sans arrêter
   l'enregistrement. Une appli web ne peut pas actionner elle-même le bouton Accueil : le coin
-  rappelle le geste (bouton Accueil ou balayage vers le haut). L'enregistrement audio continue en
+  confirme par une vibration, puis on utilise le bouton Accueil (ou le balayage vers le haut).
+  Aucun texte ne s'affiche sur l'écran noir. L'enregistrement audio continue en
   arrière-plan sur Android ; la dictée en direct se met en pause et reprend au retour dans l'appli.
 - Installable sur l'écran d'accueil, thème clair/sombre automatique.
 
