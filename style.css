@@ -268,3 +268,38 @@ body.masked { overflow: hidden; }
 .audio-progress small { color: var(--muted); font-size: .8rem; }
 .audio-progress[hidden] { display: none; }
 
+
+/* ---------- Onglets de la fenêtre 📚 ---------- */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 12px 0 4px; border-bottom: 1px solid var(--border); }
+.tab {
+  font: inherit; font-size: .9rem; padding: 8px 4px; background: none; border: none; color: var(--muted);
+  border-bottom: 3px solid transparent; margin-bottom: -1px;
+}
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+[role="tabpanel"][hidden] { display: none; }
+
+/* ---------- Onglet Fichiers ---------- */
+.file-filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 2px; }
+.file-filters button {
+  font: inherit; font-size: .8rem; padding: 5px 10px; border-radius: 14px;
+  border: 1px solid var(--border); background: var(--card); color: var(--muted);
+}
+.file-filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.files-list { list-style: none; margin: 0; padding: 0; }
+.files-list li { border-top: 1px solid var(--border); }
+.files-list label { display: flex; align-items: center; gap: 10px; padding: 10px 2px; cursor: pointer; }
+.files-list input { width: 20px; height: 20px; flex: none; accent-color: var(--accent); }
+.files-list .ficon { font-size: 1.4rem; flex: none; }
+.files-list .finfo { flex: 1; min-width: 0; }
+.files-list .finfo strong { display: block; font-size: .95rem; font-variant-numeric: tabular-nums; }
+.files-list .finfo span { display: block; color: var(--muted); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files-list li.selected { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.files-list .empty { color: var(--muted); padding: 12px 0; border: none; }
+.files-bar {
+  position: sticky; bottom: -16px; background: var(--card); border-top: 1px solid var(--border);
+  padding: 10px 0 4px; margin-top: 4px; display: flex; flex-direction: column; gap: 8px;
+}
+.files-bar > span { font-size: .85rem; color: var(--muted); }
+.files-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.files-actions .btn { padding: 9px 4px; font-size: .85rem; }
+.btn.danger { color: #d1242f; border-color: color-mix(in srgb, #d1242f 40%, var(--border)); }

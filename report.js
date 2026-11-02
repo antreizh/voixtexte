@@ -708,5 +708,11 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     });
   }
 
-  return { KINDS, classify, parseAction, buildFromSegments, toHTML, toDocx, generateWithClaude, init, settings };
+  // Aperçu du compte-rendu d'un enregistrement (onglet Fichiers).
+  function preview(source) {
+    $('previewArea').innerHTML = toHTML(source.report, source);
+    $('previewDialog').showModal();
+  }
+
+  return { KINDS, classify, parseAction, buildFromSegments, toHTML, toDocx, generateWithClaude, init, settings, crName, preview };
 })();

@@ -433,7 +433,11 @@ const VTAudio = (() => {
   recover().then(() => renderPanel());
 
   return {
-    start, stop, remove, renderPanel, transcribe,
+    start, stop, remove, renderPanel, transcribe, fileName,
+    get: getMeta,
+    // Fichiers son terminés, du plus récent au plus ancien.
+    list: async () => (await tx(['audio'], 'readonly', (t) => reqP(t.objectStore('audio').getAll())))
+      .filter((m) => m.status === 'done' && m.blob).sort((a, b) => b.start - a.start),
     isRecording: () => Boolean(rec) || starting,
     isTranscribing: () => Boolean(job),
   };

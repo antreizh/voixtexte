@@ -336,6 +336,14 @@ function switchTo(rec) {
   if (wasListening) setTimeout(start, 300);
 }
 
+// Supprime un enregistrement (texte, compte-rendu et fichier son associé).
+function deleteRecording(rec) {
+  recordings = recordings.filter((r) => r !== rec);
+  if (rec.audioId && audioApi()) audioApi().remove(rec.audioId);
+  if (rec === current) switchTo(recordings[0] || newRecording());
+  else persist();
+}
+
 // ---------- Historique ----------
 function renderHistory() {
   els.historyList.replaceChildren();
@@ -371,10 +379,7 @@ function renderHistory() {
     del.setAttribute('aria-label', 'Supprimer cet enregistrement');
     del.addEventListener('click', () => {
       if (!confirm('Supprimer l\'enregistrement du ' + formatDate(rec.start) + ' ?')) return;
-      recordings = recordings.filter((r) => r !== rec);
-      if (rec.audioId && audioApi()) audioApi().remove(rec.audioId);
-      if (rec === current) switchTo(recordings[0] || newRecording());
-      else persist();
+      deleteRecording(rec);
       renderHistory();
     });
 
@@ -508,7 +513,7 @@ window.VT = {
   persist, toast, formatDate, formatTime, formatStamp, segmentText, recordingText,
   isListening: () => listening,
   get recordings() { return recordings; },
-  newRecording, switchTo, addSegment, render, setStatus, mask, unmask, requestWakeLock, releaseWakeLock,
+  newRecording, switchTo, deleteRecording, addSegment, render, setStatus, mask, unmask, requestWakeLock, releaseWakeLock,
   lang: () => els.lang.value,
   setMaskBtn: () => {}, // bouton 🌑 toujours visible dans l'en-tête
 };

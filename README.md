@@ -44,6 +44,18 @@ Choisissez **« ⏺️ Enregistrement audio »** au-dessus du texte, puis appuye
 La retranscription d'un fichier nécessite **Chrome à jour** (Android ou ordinateur). Ailleurs,
 l'enregistrement fonctionne mais pas la retranscription du fichier.
 
+## Fichiers 🗂️
+
+Dans 📚, l'onglet **« 🗂️ Fichiers »** liste les fichiers son (`enr_…`) et les comptes-rendus
+(`cr_…`) avec leur date et leur heure, du plus récent au plus ancien, filtrables par type.
+Cochez un ou plusieurs fichiers (ou « Tout sélectionner ») puis :
+
+- **👁️ Consulter** (un seul fichier) : aperçu du compte-rendu, ou ouverture du son avec son lecteur ;
+- **📤 Partager** : envoi par le menu de partage du téléphone (mail, messagerie, Drive…), les
+  comptes-rendus au format Word ; sans menu de partage, les fichiers sont enregistrés dans le téléphone ;
+- **🗑️ Supprimer** : après confirmation. Le texte de la transcription est conservé tant qu'il
+  reste dans l'onglet Enregistrements.
+
 ## Compte-rendu de réunion 📝
 
 Le bouton 📝 transforme la transcription en compte-rendu structuré, modifiable, puis exporté en

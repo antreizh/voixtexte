@@ -20,7 +20,7 @@
 <body>
   <header>
     <h1 class="brand"><img src="icons/logo-96.png" alt="" width="32" height="32">VTS</h1>
-    <button id="history" class="tool small" title="Enregistrements" aria-label="Enregistrements">📚</button>
+    <button id="history" class="tool small" title="Enregistrements et fichiers" aria-label="Enregistrements et fichiers">📚</button>
     <button id="maskBtn" class="tool small" title="Écran noir" aria-label="Passer en écran noir">🌑</button>
     <button id="settings" class="tool small" title="Réglages" aria-label="Réglages">⚙️</button>
     <select id="lang" aria-label="Langue">
@@ -73,11 +73,34 @@
 
   <dialog id="historyDialog">
     <div class="dialog-head">
-      <h2>Enregistrements</h2>
+      <h2>Mes enregistrements</h2>
       <button id="closeHistory" class="tool small" aria-label="Fermer">✕</button>
     </div>
-    <label class="opt"><input type="checkbox" id="stamps"> Horodater les phrases dans les exports</label>
-    <ul id="historyList" class="history-list"></ul>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" class="tab" data-tab="tabRecs" aria-selected="true">📚 Enregistrements</button>
+      <button type="button" role="tab" class="tab" data-tab="tabFiles" aria-selected="false">🗂️ Fichiers</button>
+    </div>
+    <div id="tabRecs" role="tabpanel">
+      <label class="opt"><input type="checkbox" id="stamps"> Horodater les phrases dans les exports</label>
+      <ul id="historyList" class="history-list"></ul>
+    </div>
+    <div id="tabFiles" role="tabpanel" hidden>
+      <div class="file-filters" role="group" aria-label="Type de fichier">
+        <button type="button" data-filter="all" aria-pressed="true">Tous</button>
+        <button type="button" data-filter="enr" aria-pressed="false">🔊 Sons</button>
+        <button type="button" data-filter="cr" aria-pressed="false">📄 Comptes-rendus</button>
+      </div>
+      <label class="opt"><input type="checkbox" id="filesAll"> Tout sélectionner</label>
+      <ul id="filesList" class="files-list"></ul>
+      <div class="files-bar">
+        <span id="filesCount">Aucun fichier sélectionné</span>
+        <div class="files-actions">
+          <button id="filesOpen" type="button" class="btn">👁️ Consulter</button>
+          <button id="filesShare" type="button" class="btn">📤 Partager</button>
+          <button id="filesDelete" type="button" class="btn danger">🗑️ Supprimer</button>
+        </div>
+      </div>
+    </div>
   </dialog>
 
   <!-- Compte-rendu : édition -->
@@ -200,5 +223,6 @@
   <script src="report.js"></script>
   <script src="app.js"></script>
   <script src="audio.js"></script>
+  <script src="files.js"></script>
 </body>
 </html>
