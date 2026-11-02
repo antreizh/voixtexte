@@ -27,6 +27,16 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
   Android ; la dictée en direct se met en pause et reprend au retour dans l'appli.
 - Installable sur l'écran d'accueil, thème clair/sombre automatique.
 
+## Voix en couleur 🎨
+
+Pendant la **dictée en direct**, chaque voix entendue a sa couleur, avec son nom à chaque
+changement d'interlocuteur (« Voix 1 », « Voix 2 »…). Touchez le nom pour le **renommer**
+(« Marie ») : le nom est repris dans les exports (« Marie : … ») et transmis à Claude.
+
+L'analyse est faite sur le téléphone, à partir de la hauteur et du timbre de la voix.
+C'est une **estimation** : fiable entre voix nettement différentes (voix grave / voix aiguë),
+elle peut confondre deux voix proches. Désactivable dans ⚙️ Réglages. Nécessite Chrome à jour.
+
 ## Enregistrement audio ⏺️
 
 Choisissez **« ⏺️ Enregistrement audio »** au-dessus du texte, puis appuyez sur le micro.

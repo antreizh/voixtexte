@@ -318,3 +318,19 @@ body.masked { overflow: hidden; }
   border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical;
 }
 .comment-count { text-align: right; font-size: .8rem; color: var(--muted); margin: 4px 0 8px; }
+
+/* ---------- Couleurs des voix (dictée en direct) ---------- */
+:root {
+  --v1: #0969da; --v2: #bc4c00; --v3: #1a7f37; --v4: #8250df; --v5: #bf3989; --v6: #1b7c83;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --v1: #58a6ff; --v2: #f0883e; --v3: #3fb950; --v4: #bc8cff; --v5: #f778ba; --v6: #39c5cf; }
+}
+.seg[class*="voice-"] { border-left: 3px solid var(--vc); padding-left: 8px; color: var(--vc); }
+.voice-1 { --vc: var(--v1); } .voice-2 { --vc: var(--v2); } .voice-3 { --vc: var(--v3); }
+.voice-4 { --vc: var(--v4); } .voice-5 { --vc: var(--v5); } .voice-6 { --vc: var(--v6); }
+.voice-tag {
+  display: block; margin: 6px 0 2px; padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--vc);
+}
+.voice-tag::after { content: " ✎"; font-weight: 400; opacity: .6; }

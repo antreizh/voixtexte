@@ -61,6 +61,17 @@ function persist() {
   }
 }
 
+// Renommer une voix (« Voix 2 » → « Marie »), pour l'affichage et les exports.
+function renameVoice(n) {
+  const name = prompt('Nom de cette voix :', VTVoices.label(current, n));
+  if (name === null) return;
+  current.voiceNames = current.voiceNames || {};
+  if (name.trim()) current.voiceNames[n] = name.trim().slice(0, 40);
+  else delete current.voiceNames[n];
+  persist();
+  render();
+}
+
 // ---------- Mise en forme ----------
 const pad = (n) => String(n).padStart(2, '0');
 function formatTime(ms) {
@@ -88,11 +99,16 @@ function segmentText(seg) {
   const label = seg.kind ? VTReport.KINDS[seg.kind] : '';
   return label ? `[${label}] ${seg.text}` : seg.text;
 }
+// Ligne d'export : « Voix 2 : … » quand plusieurs voix ont été distinguées.
+function lineText(rec, seg) {
+  const who = seg.voice && VTVoices.count(rec) > 1 ? VTVoices.label(rec, seg.voice) + ' : ' : '';
+  return who + segmentText(seg);
+}
 function recordingText(rec, withStamps = false) {
   if (withStamps) {
-    return rec.segments.map((s) => `[${formatTime(s.t)}] ${segmentText(s)}`).join('\n');
+    return rec.segments.map((s) => `[${formatTime(s.t)}] ${lineText(rec, s)}`).join('\n');
   }
-  return rec.segments.map(segmentText).join('\n');
+  return rec.segments.map((s) => lineText(rec, s)).join('\n');
 }
 function exportText() {
   return recordingText(current, els.stamps.checked).trim();
@@ -102,9 +118,25 @@ function exportText() {
 function render(interim = '') {
   const text = recordingText(current);
   // Une ligne par phrase, avec un badge coloré pour les mots-clés reconnus.
+  const multi = VTVoices.count(current) > 1;
+  let prevVoice = null;
   els.final.replaceChildren(...current.segments.map((seg) => {
     const line = document.createElement('div');
     line.className = 'seg';
+    // Couleur par voix, et nom de la voix à chaque changement d'interlocuteur.
+    if (multi && seg.voice) {
+      line.classList.add('voice-' + (((seg.voice - 1) % 6) + 1));
+      if (seg.voice !== prevVoice) {
+        const tag = document.createElement('button');
+        tag.type = 'button';
+        tag.className = 'voice-tag';
+        tag.textContent = VTVoices.label(current, seg.voice);
+        tag.title = 'Renommer cette voix';
+        tag.addEventListener('click', () => renameVoice(seg.voice));
+        line.append(tag);
+      }
+    }
+    prevVoice = seg.voice || prevVoice;
     if (seg.kind) {
       const badge = document.createElement('span');
       badge.className = 'badge kind-' + seg.kind;
@@ -154,11 +186,12 @@ let listening = false;      // l'utilisateur veut écouter
 let savedIndexes = new Set(); // résultats finaux déjà sauvegardés pour la session en cours
 let wakeLock = null;
 let restartTimer = null;
+let voiceTrack = null;       // piste micro partagée avec l'analyse des voix
 
 // Mot-clé prononcé seul (« Décision… » puis pause) : il s'applique à la phrase suivante.
 let pendingKind = null;
 
-function addSegment(rec, raw, t = Date.now()) {
+function addSegment(rec, raw, t = Date.now(), voice = null) {
   const { kind, text } = VTReport.classify(raw.trim());
   if (kind && !text) {
     pendingKind = kind;
@@ -166,6 +199,7 @@ function addSegment(rec, raw, t = Date.now()) {
   }
   if (!text) return;
   const seg = { t, text: capitalize(text) };
+  if (voice) seg.voice = voice;
   const finalKind = kind || pendingKind;
   if (finalKind) seg.kind = finalKind;
   pendingKind = null;
@@ -196,7 +230,7 @@ function createRecognition() {
         // Phrase validée : sauvegarde immédiate, une seule fois.
         if (!savedIndexes.has(i)) {
           savedIndexes.add(i);
-          addSegment(target, res[0].transcript);
+          addSegment(target, res[0].transcript, Date.now(), VTVoices.voiceFor(target));
         }
       } else {
         interimText = joinText(interimText, res[0].transcript.trim());
@@ -243,7 +277,7 @@ function createRecognition() {
       clearTimeout(restartTimer);
       restartTimer = setTimeout(() => {
         if (!listening || r !== recognition) return; // session remplacée ou arrêtée
-        try { r.start(); } catch { /* déjà démarré */ }
+        try { if (voiceTrack) r.start(voiceTrack); else r.start(); } catch { /* déjà démarré */ }
       }, 150);
     } else {
       setStatus('En pause');
@@ -269,13 +303,22 @@ function start() {
   // Enregistrement encore vide : son heure de début est celle du démarrage de la dictée.
   if (!current.segments.length && !current.audioId) { current.start = Date.now(); persist(); }
   if (recognition) { try { recognition.abort(); } catch { /* déjà arrêtée */ } }
-  recognition = createRecognition();
-  try {
-    recognition.start();
-  } catch (e) {
-    listening = false;
-    setStatus('Impossible de démarrer : ' + e.message);
-    return;
+  const r = recognition = createRecognition();
+  voiceTrack = null;
+  const go = (track) => {
+    if (!listening || recognition !== r) return; // arrêté pendant l'ouverture du micro
+    try {
+      if (track) r.start(track); else r.start();
+    } catch (e) {
+      stop();
+      setStatus('Impossible de démarrer : ' + e.message);
+    }
+  };
+  // Distinction des voix : un seul micro pour la reconnaissance et l'analyse du son.
+  if (VTReport.settings().voices && VTVoices.supported()) {
+    VTVoices.open().then((t) => { voiceTrack = t; go(t); }, () => go(null));
+  } else {
+    go(null);
   }
   els.mic.setAttribute('aria-pressed', 'true');
   els.mic.setAttribute('aria-label', 'Arrêter la transcription');
@@ -314,6 +357,8 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 
 function stop() {
   listening = false;
+  VTVoices.close();
+  voiceTrack = null;
   unmask();
   clearTimeout(restartTimer);
   els.mic.setAttribute('aria-pressed', 'false');
@@ -485,7 +530,7 @@ els.download.addEventListener('click', () => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && listening) {
     requestWakeLock();
-    try { recognition.start(); } catch { /* déjà active */ }
+    try { if (voiceTrack) recognition.start(voiceTrack); else recognition.start(); } catch { /* déjà active */ }
   }
 });
 
@@ -510,7 +555,7 @@ render();
 // Accès pour le module compte-rendu (report.js).
 window.VT = {
   get current() { return current; },
-  persist, toast, formatDate, formatTime, formatStamp, segmentText, recordingText,
+  persist, toast, formatDate, formatTime, formatStamp, segmentText, lineText, recordingText,
   isListening: () => listening,
   get recordings() { return recordings; },
   newRecording, switchTo, deleteRecording, addSegment, render, setStatus, mask, unmask, requestWakeLock, releaseWakeLock,

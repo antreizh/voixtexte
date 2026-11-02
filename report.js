@@ -132,6 +132,7 @@ const VTReport = (() => {
     org: '', author: '', color: '#1F3864', logo: 'icons/logo-report.png', confidential: 'Document interne – diffusion restreinte',
     apiKey: '',
     blackout: true,
+    voices: true,
     autoExport: true,
   };
   function settings() {
@@ -172,7 +173,7 @@ const VTReport = (() => {
 
   const SYSTEM = `Tu es l'assistant de rédaction d'une organisation professionnelle. À partir de la transcription automatique d'une réunion, tu rédiges un compte-rendu clair, factuel et concis, dans la langue de la transcription.
 
-La transcription vient d'une reconnaissance vocale : elle contient des erreurs de mots, pas de ponctuation et des répétitions. Corrige-les en t'appuyant sur le contexte, sans inventer d'information. Les lignes préfixées par une étiquette ([Point], [Décision], [Action], [Participants], [Prochaine réunion]) ont été balisées par l'orateur : respecte ces indications, et repère aussi les décisions et actions qui n'ont pas été balisées.
+La transcription vient d'une reconnaissance vocale : elle contient des erreurs de mots, pas de ponctuation et des répétitions. Corrige-les en t'appuyant sur le contexte, sans inventer d'information. Les lignes préfixées par une étiquette ([Point], [Décision], [Action], [Participants], [Prochaine réunion]) ont été balisées par l'orateur : respecte ces indications, et repère aussi les décisions et actions qui n'ont pas été balisées. Certaines lignes commencent par le nom d'une voix (« Voix 2 : », ou un prénom) : cette attribution est automatique et approximative, sers-t'en comme indice sans la tenir pour certaine.
 
 - points : regroupe les échanges par sujet, chaque contenu en quelques phrases rédigées au style indirect.
 - decisions : une phrase par décision effectivement prise.
@@ -189,7 +190,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     // La clé est saisie par l'utilisateur et ne sert que depuis son propre appareil.
     const client = new Anthropic({ apiKey: st.apiKey, dangerouslyAllowBrowser: true });
 
-    const transcript = rec.segments.map((s) => `[${VT.formatTime(s.t)}] ${VT.segmentText(s)}`).join('\n');
+    const transcript = rec.segments.map((s) => `[${VT.formatTime(s.t)}] ${VT.lineText(rec, s)}`).join('\n');
     const context = [
       report.title && `Titre provisoire : ${report.title}`,
       `Date : ${report.date} ${report.time || ''}`,
@@ -278,7 +279,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
   ${r.decisions.length ? section('Décisions', `<table class="doc-table"><thead><tr><th style="width:3.2em">N°</th><th>Décision</th></tr></thead><tbody>${r.decisions.map((d, i) => `<tr><td>D${i + 1}</td><td>${esc(d)}</td></tr>`).join('')}</tbody></table>`) : ''}
   ${filledActions.length ? section('Plan d\'actions', `<table class="doc-table"><thead><tr><th style="width:3.2em">N°</th><th>Action</th><th>Responsable</th><th>Échéance</th></tr></thead><tbody>${filledActions.map((a, i) => `<tr><td>A${i + 1}</td><td>${esc(a.task)}</td><td>${esc(a.owner)}</td><td>${esc(a.due)}</td></tr>`).join('')}</tbody></table>`) : ''}
   ${r.nextMeeting ? section('Prochaine réunion', paras(r.nextMeeting)) : ''}
-  ${r.annex && rec.segments.length ? `<section class="doc-annex">${section('Annexe – transcription intégrale', `<div class="doc-transcript">${rec.segments.map((s) => `<p><span>${VT.formatTime(s.t)}</span> ${esc(VT.segmentText(s))}</p>`).join('')}</div>`)}</section>` : ''}
+  ${r.annex && rec.segments.length ? `<section class="doc-annex">${section('Annexe – transcription intégrale', `<div class="doc-transcript">${rec.segments.map((s) => `<p><span>${VT.formatTime(s.t)}</span> ${esc(VT.lineText(rec, s))}</p>`).join('')}</div>`)}</section>` : ''}
   <footer class="doc-foot">${esc(st.confidential)}${st.org ? ' · ' + esc(st.org) : ''} · ${esc(crName(rec))}</footer>
 </article>`;
   }
@@ -401,7 +402,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
       body.push(new D.Paragraph({ children: [new D.PageBreak()] }), h2('Annexe – transcription intégrale'));
       for (const s of rec.segments) {
         body.push(new D.Paragraph({
-          children: [text(VT.formatTime(s.t) + '  ', { size: 18, color: GREY }), text(VT.segmentText(s), { size: 20 })],
+          children: [text(VT.formatTime(s.t) + '  ', { size: 18, color: GREY }), text(VT.lineText(rec, s), { size: 20 })],
           spacing: { after: 40 },
         }));
       }
@@ -667,6 +668,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
         logo: pendingLogo,
         apiKey: $('sKey').value.trim(),
         blackout: $('sBlackout').checked,
+        voices: $('sVoices').checked,
         autoExport: $('sAutoExport').checked,
       };
       if (!saveSettings(st)) { alert('Enregistrement impossible (stockage plein ?). Essayez un logo plus léger.'); return; }
@@ -683,6 +685,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     $('sColor').value = st.color;
     $('sConf').value = st.confidential;
     $('sBlackout').checked = st.blackout;
+    $('sVoices').checked = st.voices;
     $('sAutoExport').checked = st.autoExport;
     $('sKey').value = st.apiKey;
     pendingLogo = st.logo;
