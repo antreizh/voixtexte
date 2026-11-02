@@ -67,6 +67,11 @@ function formatTime(ms) {
   const d = new Date(ms);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
+// jjmmaaaa_hhmmss : base des noms de fichiers (Enr_… et cr_…)
+function formatStamp(ms) {
+  const d = new Date(ms);
+  return `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
 function formatDate(ms) {
   return new Date(ms).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
 }
@@ -261,6 +266,8 @@ function releaseWakeLock() {
 function start() {
   if (!SpeechRecognition || listening) return;
   listening = true;
+  // Enregistrement encore vide : son heure de début est celle du démarrage de la dictée.
+  if (!current.segments.length && !current.audioId) { current.start = Date.now(); persist(); }
   if (recognition) { try { recognition.abort(); } catch { /* déjà arrêtée */ } }
   recognition = createRecognition();
   try {
@@ -512,7 +519,7 @@ render();
 // Accès pour le module compte-rendu (report.js).
 window.VT = {
   get current() { return current; },
-  persist, toast, formatDate, formatTime, segmentText, recordingText,
+  persist, toast, formatDate, formatTime, formatStamp, segmentText, recordingText,
   isListening: () => listening,
   get recordings() { return recordings; },
   newRecording, switchTo, addSegment, render, setStatus, mask, unmask, requestWakeLock, releaseWakeLock,

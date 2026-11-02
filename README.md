@@ -33,9 +33,8 @@ Choisissez **« ⏺️ Enregistrement audio »** au-dessus du texte, puis appuye
 
 - Le son est sauvegardé sur l'appareil **toutes les 5 secondes** : si l'appli est fermée ou le
   téléphone s'éteint, l'enregistrement est récupéré à la prochaine ouverture.
-- Le fichier est nommé d'après l'heure de début : **`Enr_hh:mn:ss`** (ex. `Enr_14:32:05`).
-  Exporté dans le téléphone (Téléchargements), il devient `Enr_14_32_05.webm` : le caractère
-  `:` est interdit dans les noms de fichiers, le navigateur le remplace par `_`.
+- Le fichier est nommé d'après la date et l'heure de début : **`Enr_jjmmaaaa_hhmmss`**
+  (ex. `Enr_02112026_143205.webm` pour un enregistrement lancé le 2 novembre 2026 à 14 h 32 min 05 s).
 - À la fin, l'appli propose de **retranscrire** le fichier en texte (la relecture dure à peu près
   la durée de l'enregistrement), puis de créer le **compte-rendu**. Les mots-clés (« Point
   suivant », « Décision », « Action »…) prononcés pendant l'enregistrement sont reconnus.
@@ -69,7 +68,8 @@ l'appareil. Relisez toujours le résultat avant diffusion.
 
 **3. Export** : 👁️ aperçu, 📄 PDF (via l'impression du navigateur : « Enregistrer au format PDF »),
 💾 Word (.docx modifiable) ou 📤 partage direct du fichier Word. Nom automatique :
-`CR_2026-11-02_Comite-de-pilotage.docx`.
+**`cr_jjmmaaaa_hhmmss`** d'après le démarrage de la source (fichier son ou dictée),
+ex. `cr_02112026_143205.docx` ; c'est aussi la référence indiquée dans le document.
 
 **Charte** (⚙️ Réglages) : nom de l'organisation, logo, couleur principale, rédacteur par défaut,
 mention de pied de page. Le document comprend un en-tête avec logo, un tableau d'informations,

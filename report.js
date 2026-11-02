@@ -246,9 +246,8 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     const d = r.date ? new Date(r.date + 'T12:00') : new Date();
     return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + (r.time ? ` – ${r.time.replace(':', ' h ')}` : '');
   }
-  function reference(r) {
-    return 'CR-' + (r.date || '').replace(/-/g, '') + (r.time ? '-' + r.time.replace(':', '') : '');
-  }
+  // Nom du compte-rendu : cr_jjmmaaaa_hhmmss, d'après le démarrage de la source (son ou dictée).
+  const crName = (source) => 'cr_' + VT.formatStamp(source.start);
 
   function toHTML(r, rec) {
     const st = settings();
@@ -258,7 +257,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
       r.participants.length && ['Participants', r.participants.join(', ')],
       r.absents.length && ['Excusés', r.absents.join(', ')],
       r.author && ['Rédacteur', r.author],
-      ['Référence', reference(r)],
+      ['Référence', crName(rec)],
     ].filter(Boolean);
     let n = 0;
     const section = (title, body) => `<h2><span class="num">${++n}</span>${esc(title)}</h2>${body}`;
@@ -280,7 +279,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
   ${filledActions.length ? section('Plan d\'actions', `<table class="doc-table"><thead><tr><th style="width:3.2em">N°</th><th>Action</th><th>Responsable</th><th>Échéance</th></tr></thead><tbody>${filledActions.map((a, i) => `<tr><td>A${i + 1}</td><td>${esc(a.task)}</td><td>${esc(a.owner)}</td><td>${esc(a.due)}</td></tr>`).join('')}</tbody></table>`) : ''}
   ${r.nextMeeting ? section('Prochaine réunion', paras(r.nextMeeting)) : ''}
   ${r.annex && rec.segments.length ? `<section class="doc-annex">${section('Annexe – transcription intégrale', `<div class="doc-transcript">${rec.segments.map((s) => `<p><span>${VT.formatTime(s.t)}</span> ${esc(VT.segmentText(s))}</p>`).join('')}</div>`)}</section>` : ''}
-  <footer class="doc-foot">${esc(st.confidential)}${st.org ? ' · ' + esc(st.org) : ''} · ${esc(reference(r))}</footer>
+  <footer class="doc-foot">${esc(st.confidential)}${st.org ? ' · ' + esc(st.org) : ''} · ${esc(crName(rec))}</footer>
 </article>`;
   }
 
@@ -342,7 +341,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     const footer = new D.Footer({
       children: [new D.Paragraph({
         children: [
-          text(`${st.confidential}  ·  ${reference(r)}`, { size: 16, color: GREY }),
+          text(`${st.confidential}  ·  ${crName(rec)}`, { size: 16, color: GREY }),
           new D.TextRun({ children: [new D.Tab(), 'Page ', D.PageNumber.CURRENT, ' / ', D.PageNumber.TOTAL_PAGES], font: FONT, size: 16, color: GREY }),
         ],
         tabStops: [{ type: D.TabStopType.RIGHT, position: D.TabStopPosition.MAX }],
@@ -356,7 +355,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
       r.participants.length && ['Participants', r.participants.join(', ')],
       r.absents.length && ['Excusés', r.absents.join(', ')],
       r.author && ['Rédacteur', r.author],
-      ['Référence', reference(r)],
+      ['Référence', crName(rec)],
     ].filter(Boolean);
 
     const body = [
@@ -444,9 +443,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
   }
 
   function fileName(r, ext) {
-    const slug = (r.title || 'reunion').normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
-    return `CR_${r.date || 'sans-date'}_${slug}.${ext}`;
+    return `${crName(rec)}.${ext}`;
   }
 
   // ---------- Interface ----------

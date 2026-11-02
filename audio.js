@@ -114,7 +114,7 @@ const VTAudio = (() => {
     const mime = pickMime();
     const meta = {
       id: 'a' + startMs.toString(36),
-      name: 'Enr_' + VT.formatTime(startMs), // Enr_hh:mn:ss
+      name: 'Enr_' + VT.formatStamp(startMs), // Enr_jjmmaaaa_hhmmss
       start: startMs, mime: mime || 'audio/webm', duration: 0, size: 0, status: 'recording',
     };
     target.start = startMs;
