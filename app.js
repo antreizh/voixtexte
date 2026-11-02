@@ -237,7 +237,7 @@ function createRecognition() {
       // Relance automatique : le navigateur coupe après un silence ou une phrase.
       clearTimeout(restartTimer);
       restartTimer = setTimeout(() => {
-        if (!listening) return;
+        if (!listening || r !== recognition) return; // session remplacée ou arrêtée
         try { r.start(); } catch { /* déjà démarré */ }
       }, 150);
     } else {
@@ -261,6 +261,7 @@ function releaseWakeLock() {
 function start() {
   if (!SpeechRecognition || listening) return;
   listening = true;
+  if (recognition) { try { recognition.abort(); } catch { /* déjà arrêtée */ } }
   recognition = createRecognition();
   try {
     recognition.start();

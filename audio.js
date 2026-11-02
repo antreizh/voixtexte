@@ -68,7 +68,9 @@ const VTAudio = (() => {
   }
 
   // ---------- Enregistrement ----------
-  let rec = null; // { stream, mr, meta, chunks, timer, target }
+  let rec = null;        // { stream, mr, meta, chunks, timer, target }
+  let starting = false;  // ouverture du micro en cours (peut prendre une seconde)
+  let cancelStart = false;
 
   function pickMime() {
     for (const t of ['audio/webm;codecs=opus', 'audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/ogg;codecs=opus']) {
@@ -78,14 +80,27 @@ const VTAudio = (() => {
   }
 
   async function start() {
-    if (rec) return;
+    if (rec || starting) return; // un seul enregistrement à la fois
+    starting = true;
+    cancelStart = false;
+    $('mic').setAttribute('aria-pressed', 'true');
+    VT.setStatus('Ouverture du micro…', true);
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
     } catch (e) {
+      starting = false;
+      $('mic').setAttribute('aria-pressed', 'false');
       VT.setStatus(e.name === 'NotAllowedError' ? 'Accès au micro refusé. Autorisez le micro dans les réglages du navigateur.' : 'Micro indisponible : ' + e.message);
+      return;
+    }
+    starting = false;
+    if (cancelStart) { // arrêt demandé pendant l'ouverture du micro
+      stream.getTracks().forEach((t) => t.stop());
+      $('mic').setAttribute('aria-pressed', 'false');
+      VT.setStatus('Enregistrement annulé');
       return;
     }
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
@@ -123,7 +138,11 @@ const VTAudio = (() => {
       addChunk(meta.id, idx++, e.data).catch(() => {}); // sauvegarde au fil de l'eau
     };
     rec = { stream, mr, meta, chunks, target, startMs };
-    mr.onstop = () => finish(rec).catch((err) => VT.setStatus('Erreur de sauvegarde : ' + err.message));
+    const r = rec;
+    mr.onstop = () => finish(r);
+    mr.onerror = () => { try { mr.stop(); } catch { finish(r); } };
+    // Micro coupé par le système (autre appli, appel…) : on termine proprement.
+    stream.getAudioTracks().forEach((t) => { t.onended = () => { if (rec === r) stop(); }; });
     mr.start(5000);
 
     rec.timer = setInterval(tick, 1000);
@@ -142,10 +161,13 @@ const VTAudio = (() => {
   }
 
   function stop() {
-    if (!rec || rec.mr.state === 'inactive') return;
-    rec.mr.stop();
-    rec.stream.getTracks().forEach((t) => t.stop());
-    clearInterval(rec.timer);
+    if (starting) { cancelStart = true; return; }
+    if (!rec) return;
+    const r = rec;
+    clearInterval(r.timer);
+    if (r.mr.state === 'inactive') finish(r); // l'enregistreur s'est déjà arrêté seul
+    else { try { r.mr.stop(); } catch { finish(r); } }
+    r.stream.getTracks().forEach((t) => t.stop());
     $('mic').setAttribute('aria-pressed', 'false');
     $('mic').setAttribute('aria-label', 'Démarrer l\'enregistrement audio');
     VT.releaseWakeLock();
@@ -153,17 +175,31 @@ const VTAudio = (() => {
   }
 
   async function finish(r) {
+    if (r.finished) return;
+    r.finished = true;
+    // Quoi qu'il arrive, l'appli sort de l'état « enregistrement » (micro libéré, bouton actif).
+    if (rec === r) rec = null;
+    clearInterval(r.timer);
+    r.stream.getTracks().forEach((t) => t.stop());
+    $('mic').setAttribute('aria-pressed', 'false');
+    VT.releaseWakeLock();
+    VT.unmask();
+    VT.setMaskBtn(false);
     const { meta, chunks } = r;
     meta.duration = (Date.now() - r.startMs) / 1000;
     const blob = new Blob(chunks, { type: meta.mime });
     meta.blob = blob;
     meta.size = blob.size;
     meta.status = 'done';
-    await putMeta(meta);
-    await takeChunks(meta.id); // morceaux devenus inutiles
-    rec = null;
-    VT.unmask();
-    VT.setMaskBtn(false);
+    try {
+      await putMeta(meta);
+      await takeChunks(meta.id); // morceaux devenus inutiles
+    } catch (err) {
+      VT.setStatus('⚠ Sauvegarde incomplète : ' + err.message + ' — exportez le fichier.');
+      exportFile(meta, false);
+      VT.render();
+      return;
+    }
     VT.setStatus(`✓ ${meta.name} enregistré (${fmtDur(meta.duration)})`);
     if (VTReport.settings().autoExport) exportFile(meta, false);
     VT.render();
@@ -398,7 +434,7 @@ const VTAudio = (() => {
 
   return {
     start, stop, remove, renderPanel, transcribe,
-    isRecording: () => Boolean(rec),
+    isRecording: () => Boolean(rec) || starting,
     isTranscribing: () => Boolean(job),
   };
 })();
