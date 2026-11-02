@@ -53,6 +53,8 @@ Cochez un ou plusieurs fichiers (ou « Tout sélectionner ») puis :
 - **👁️ Consulter** (un seul fichier) : aperçu du compte-rendu, ou ouverture du son avec son lecteur ;
 - **📤 Partager** : envoi par le menu de partage du téléphone (mail, messagerie, Drive…), les
   comptes-rendus au format Word ; sans menu de partage, les fichiers sont enregistrés dans le téléphone ;
+- **💬** (sur chaque ligne) : ajouter, modifier ou effacer un **commentaire** propre au fichier,
+  300 caractères au plus. Il s'affiche sous le fichier dans la liste et reste sur l'appareil.
 - **🗑️ Supprimer** : après confirmation. Le texte de la transcription est conservé tant qu'il
   reste dans l'onglet Enregistrements.
 

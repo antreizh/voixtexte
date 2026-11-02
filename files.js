@@ -32,6 +32,7 @@ const VTFiles = (() => {
       list.push({
         key: 'enr:' + m.id, type: 'enr', name: m.name, file: VTAudio.fileName(m), start: m.start,
         detail: `Son · ${fmtDur(m.duration)} · ${fmtSize(m.size)}` + (m.recovered ? ' · récupéré' : ''),
+        comment: m.comment || '',
         meta: m, rec: VT.recordings.find((r) => r.audioId === m.id) || null,
       });
     }
@@ -41,6 +42,7 @@ const VTFiles = (() => {
       list.push({
         key: 'cr:' + rec.id, type: 'cr', name, file: name + '.docx', start: rec.start,
         detail: 'Compte-rendu · ' + (rec.report.title || 'sans titre'), rec,
+        comment: rec.report.comment || '',
       });
     }
     // Du plus récent au plus ancien ; pour une même source, le son avant son compte-rendu.
@@ -85,8 +87,21 @@ const VTFiles = (() => {
       const detail = document.createElement('span');
       detail.textContent = e.detail;
       info.append(name, when, detail);
+      if (e.comment) {
+        const c = document.createElement('em');
+        c.className = 'fcomment';
+        c.textContent = '💬 ' + e.comment;
+        info.appendChild(c);
+      }
       label.append(box, icon, info);
-      li.appendChild(label);
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'tool small fedit';
+      edit.textContent = '💬';
+      edit.title = e.comment ? 'Modifier le commentaire' : 'Ajouter un commentaire';
+      edit.setAttribute('aria-label', edit.title + ' de ' + e.name);
+      edit.addEventListener('click', () => editComment(e));
+      li.append(label, edit);
       ul.appendChild(li);
     }
     updateBar();
@@ -112,6 +127,33 @@ const VTFiles = (() => {
   async function refresh() {
     await load();
     render();
+  }
+
+  // ---------- Commentaire (300 caractères) ----------
+  const MAX = 300;
+  function editComment(e) {
+    const dlg = $('commentDialog');
+    const ta = $('commentText');
+    $('commentFile').textContent = e.name;
+    ta.value = e.comment;
+    const count = () => { $('commentCount').textContent = `${ta.value.length} / ${MAX}`; };
+    ta.oninput = count;
+    count();
+    $('commentSave').onclick = async () => {
+      const text = ta.value.trim().slice(0, MAX);
+      if (e.type === 'enr') {
+        await VTAudio.setComment(e.meta.id, text);
+      } else {
+        e.rec.report.comment = text;
+        VT.persist();
+      }
+      dlg.close();
+      VT.toast(text ? 'Commentaire enregistré' : 'Commentaire supprimé');
+      await refresh();
+    };
+    $('commentCancel').onclick = () => dlg.close();
+    dlg.showModal();
+    ta.focus();
   }
 
   // ---------- Actions ----------

@@ -435,6 +435,13 @@ const VTAudio = (() => {
   return {
     start, stop, remove, renderPanel, transcribe, fileName,
     get: getMeta,
+    // Commentaire libre attaché au fichier son (300 caractères au plus).
+    setComment: async (id, text) => {
+      const m = await getMeta(id);
+      if (!m) return;
+      m.comment = String(text || '').slice(0, 300);
+      await putMeta(m);
+    },
     // Fichiers son terminés, du plus récent au plus ancien.
     list: async () => (await tx(['audio'], 'readonly', (t) => reqP(t.objectStore('audio').getAll())))
       .filter((m) => m.status === 'done' && m.blob).sort((a, b) => b.start - a.start),
