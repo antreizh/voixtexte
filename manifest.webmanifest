@@ -1,6 +1,6 @@
 {
-  "name": "VoixTexte – transcription en temps réel",
-  "short_name": "VoixTexte",
+  "name": "VTS – transcription en temps réel",
+  "short_name": "VTS",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

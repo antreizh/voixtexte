@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * Module « Compte-rendu » de VoixTexte.
+ * Module « Compte-rendu » de VTS.
  *  1. Mots-clés dictés (« Point suivant », « Décision », « Action »…) → structure automatique.
  *  2. Option : rédaction par Claude (clé d'API personnelle, stockée sur l'appareil).
  *  3. Formulaire modifiable, puis export Word (.docx) ou PDF à la charte de l'organisation.
@@ -408,7 +408,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     }
 
     const doc = new D.Document({
-      creator: st.author || st.org || 'VoixTexte',
+      creator: st.author || st.org || 'VTS',
       title: r.title,
       description: 'Compte-rendu de réunion',
       styles: { default: { document: { run: { font: FONT, size: 22 } } } },
