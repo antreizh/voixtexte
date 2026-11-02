@@ -1,5 +1,5 @@
-const CACHE = 'voixtexte-v7';
-const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'report.js', 'icons/logo-96.png', 'icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo-report.png', 'manifest.webmanifest',
+const CACHE = 'voixtexte-v8';
+const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'report.js', 'favicon.ico', 'icons/logo-96.png', 'icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo-report.png', 'manifest.webmanifest',
   'vendor/docx-9.12.0.mjs', 'vendor/anthropic-sdk-0.135.0.mjs'];
 
 self.addEventListener('install', (e) => {
