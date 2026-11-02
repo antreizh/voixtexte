@@ -1,6 +1,6 @@
 :root {
   --bg: #f6f8fa; --fg: #1f2328; --muted: #656d76; --card: #ffffff;
-  --accent: #1f6feb; --rec: #d1242f; --border: #d0d7de;
+  --accent: #1f6feb; --rec: #d1242f; --ready: #1a7f37; --border: #d0d7de;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0d1117; --fg: #e6edf3; --muted: #8d96a0; --card: #161b22; --border: #30363d; }
@@ -62,7 +62,7 @@ button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparen
 }
 .mic {
   width: 76px; height: 76px; border-radius: 50%; border: none;
-  background: var(--accent); color: #fff; display: grid; place-items: center;
+  background: var(--ready); color: #fff; display: grid; place-items: center;
   box-shadow: 0 4px 12px rgba(0,0,0,.2); transition: background .2s, transform .1s;
 }
 .mic:active { transform: scale(.95); }
@@ -241,10 +241,9 @@ body.masked { overflow: hidden; }
   border: 1px solid var(--border); background: var(--card); color: var(--muted);
 }
 .mode-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
-.mic.audio-mode { background: #d1242f; }
 .mic.audio-mode::after {
   content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%;
-  background: #fff; border: 3px solid #d1242f; transform: translate(22px, 22px);
+  background: #fff; border: 3px solid currentColor; transform: translate(22px, 22px);
 }
 .mic { position: relative; }
 .mic.audio-mode[aria-pressed="true"]::after { border-radius: 3px; }
