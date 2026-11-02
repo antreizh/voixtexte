@@ -1,16 +1,37 @@
 {
+  "id": "./",
   "name": "VTS – transcription en temps réel",
   "short_name": "VTS",
+  "description": "Transcription de la voix en temps réel et comptes-rendus de réunion.",
   "lang": "fr",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0b5ed7",
   "theme_color": "#0b5ed7",
+  "categories": ["productivity", "business"],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/icon-192.png?v=vts2", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png?v=vts2", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png?v=vts2", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png?v=vts2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nouvel enregistrement",
+      "short_name": "Nouveau",
+      "description": "Démarrer une nouvelle transcription",
+      "url": "./?action=nouveau",
+      "icons": [{ "src": "icons/shortcut-new-96.png?v=vts2", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Compte-rendu",
+      "short_name": "Compte-rendu",
+      "description": "Ouvrir le compte-rendu de l'enregistrement en cours",
+      "url": "./?action=compte-rendu",
+      "icons": [{ "src": "icons/shortcut-report-96.png?v=vts2", "sizes": "96x96", "type": "image/png" }]
+    }
   ]
 }

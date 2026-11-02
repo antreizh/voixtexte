@@ -471,6 +471,15 @@ window.VT = {
 };
 VTReport.init();
 
+// Raccourcis de l'icône (appui long sur Android) : ?action=nouveau | compte-rendu
+(() => {
+  const action = new URLSearchParams(location.search).get('action');
+  if (!action) return;
+  history.replaceState(null, '', location.pathname); // pas de répétition au rechargement
+  if (action === 'nouveau' && current.segments.length) switchTo(newRecording());
+  if (action === 'compte-rendu') document.getElementById('report').click();
+})();
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }

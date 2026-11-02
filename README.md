@@ -62,6 +62,15 @@ la transcription intégrale en annexe.
 2. Appuyez sur le bouton micro et autorisez l'accès au microphone.
 3. Pour l'installer : menu ⋮ → « Ajouter à l'écran d'accueil » (Android) ou bouton Partager → « Sur l'écran d'accueil » (iPhone).
 
+### Icône et raccourcis
+
+Une fois installée, l'appli apparaît avec l'icône VTS. Sur Android, un **appui long sur l'icône**
+propose deux raccourcis : « Nouvel enregistrement » et « Compte-rendu ».
+
+Si l'ancienne icône reste affichée : Android met à jour l'icône d'une appli installée en général
+sous 24 h, à l'ouverture suivante. Pour l'avoir tout de suite, désinstallez l'appli (appui long sur
+l'icône → Désinstaller) puis réinstallez-la depuis Chrome.
+
 ## Mise en ligne
 
 L'appli est 100 % statique (HTML/CSS/JS, aucun serveur). Les bibliothèques `docx` (Word) et

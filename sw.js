@@ -1,5 +1,5 @@
-const CACHE = 'voixtexte-v10';
-const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'report.js', 'favicon.ico', 'icons/logo-96.png', 'icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo-report.png', 'manifest.webmanifest',
+const CACHE = 'voixtexte-v11';
+const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'report.js', 'favicon.ico', 'icons/logo-96.png', 'icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo-report.png', 'icons/maskable-192.png', 'icons/apple-touch-icon.png', 'icons/shortcut-new-96.png', 'icons/shortcut-report-96.png', 'manifest.webmanifest',
   'vendor/docx-9.12.0.mjs', 'vendor/anthropic-sdk-0.135.0.mjs'];
 
 self.addEventListener('install', (e) => {
@@ -23,6 +23,6 @@ self.addEventListener('fetch', (e) => {
         caches.open(CACHE).then((c) => c.put(e.request, copy));
         return res;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
 });
