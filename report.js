@@ -129,7 +129,7 @@ const VTReport = (() => {
   // ---------- Réglages (charte + clé d'API) ----------
   const STORE_SETTINGS = 'voixtexte.settings';
   const DEFAULTS = {
-    org: '', author: '', color: '#1F3864', logo: '', confidential: 'Document interne – diffusion restreinte',
+    org: '', author: '', color: '#1F3864', logo: 'icons/logo-report.png', confidential: 'Document interne – diffusion restreinte',
     apiKey: '',
     blackout: true,
   };

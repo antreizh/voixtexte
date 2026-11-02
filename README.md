@@ -1,5 +1,7 @@
 # VoixTexte
 
+<img src="icons/icon-192.png" alt="Icône VoixTexte" width="96">
+
 Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte le micro de votre smartphone.
 
 ## Fonctionnalités
