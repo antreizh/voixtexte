@@ -264,5 +264,3 @@ body.masked { overflow: hidden; }
 .audio-progress small { color: var(--muted); font-size: .8rem; }
 .audio-progress[hidden] { display: none; }
 
-/* ---------- Coin gauche de l'écran noir : accueil du téléphone ---------- */
-.blackout-corner.left { right: auto; left: 0; border-top-left-radius: 0; border-top-right-radius: 100%; }

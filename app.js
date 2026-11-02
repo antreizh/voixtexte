@@ -309,12 +309,7 @@ function unmask() {
 const isBusy = () => listening || Boolean(audioApi() && audioApi().isRecording());
 els.unmask.addEventListener('click', unmask);
 
-// Coin gauche : repère pour quitter l'appli vers l'accueil du téléphone sans arrêter
-// l'enregistrement (une page web ne peut pas actionner elle-même le bouton Accueil).
-// Aucun texte sur l'écran noir : simple vibration de confirmation.
-$('homeCorner').addEventListener('click', () => {
-  if (navigator.vibrate) navigator.vibrate(30);
-});
+
 els.maskBtn.addEventListener('click', mask);
 // Une sortie du plein écran (geste système, bouton retour) réaffiche aussi l'appli.
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) unmask(); });
