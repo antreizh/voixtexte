@@ -35,7 +35,7 @@
   </div>
 
   <main>
-    <div class="statusbar"><span id="status" class="status">Prêt</span><span id="saved" class="saved"></span></div>
+    <div class="statusbar"><span id="status" class="status">Prêt</span><button id="maskBtn" class="link-btn" type="button" hidden>🌑 Masquer</button><span id="saved" class="saved"></span></div>
     <h2 id="title" class="rec-title"></h2>
     <div id="transcript" class="transcript" aria-live="polite"><p id="placeholder" class="placeholder">Appuyez sur le micro pour commencer la transcription.</p><span id="final"></span><span id="interim"></span></div>
   </main>
@@ -144,6 +144,9 @@
       <div class="logo-row"><img id="sLogoPreview" alt="Logo" hidden><button id="sLogoClear" type="button" class="btn ghost">Retirer le logo</button></div>
       <label>Mention de pied de page<input id="sConf"></label>
 
+      <h3>Écoute</h3>
+      <label class="opt"><input type="checkbox" id="sBlackout"> Écran noir pendant l'écoute (toucher le coin gris pour revenir)</label>
+
       <h3>Rédaction par Claude (facultatif)</h3>
       <label>Clé d'API Anthropic<input id="sKey" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
       <p class="hint">
@@ -156,6 +159,11 @@
   </dialog>
 
   <div id="printArea" class="print-only"></div>
+
+  <!-- Écran noir pendant l'écoute : seul le coin gris permet de revenir à l'appli -->
+  <div id="blackout" class="blackout" hidden>
+    <button id="unmask" class="blackout-corner" type="button" aria-label="Afficher l'application"></button>
+  </div>
 
   <script src="report.js"></script>
   <script src="app.js"></script>

@@ -15,6 +15,10 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
   réouvrables (pour continuer à dicter dedans) ou supprimables.
 - Export horodaté en option : `[14:32:05] Bonjour à tous`.
 - L'écran reste allumé pendant l'écoute.
+- **Écran noir pendant l'écoute** : dès qu'on lance la dictée, l'écran devient entièrement noir
+  (discret, et économe en batterie sur les écrans OLED) ; la transcription continue en dessous.
+  Un toucher sur le **petit coin gris en bas à droite** réaffiche l'appli ; « 🌑 Masquer » la
+  remasque. Désactivable dans ⚙️ Réglages.
 - Installable sur l'écran d'accueil, thème clair/sombre automatique.
 
 ## Compte-rendu de réunion 📝

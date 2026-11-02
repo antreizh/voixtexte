@@ -25,7 +25,7 @@ select {
 .banner { margin: 12px 16px; padding: 12px; border-radius: 8px; background: #fff8c5; color: #4d2d00; }
 main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 12px 16px; }
 .statusbar { display: flex; justify-content: space-between; gap: 8px; font-size: .875rem; color: var(--muted); }
-.status { color: var(--muted); }
+.status { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .saved { color: #1a7f37; white-space: nowrap; }
 .rec-title { font-size: .95rem; font-weight: 600; margin: 4px 0 8px; color: var(--muted); }
 .status.live { color: var(--rec); font-weight: 600; }
@@ -202,3 +202,21 @@ dialog.full {
   body.printing .doc { box-shadow: none; padding: 0; max-width: none; }
   .doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ---------- Écran noir pendant l'écoute ---------- */
+.blackout {
+  position: fixed; inset: 0; z-index: 1000; background: #000;
+  cursor: none; touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.blackout[hidden] { display: none; }
+.blackout-corner {
+  position: absolute; right: 0; bottom: 0; width: 56px; height: 56px; padding: 0; border: none;
+  background: #262626; border-top-left-radius: 100%; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.blackout-corner:active { background: #3a3a3a; }
+body.masked { overflow: hidden; }
+.link-btn {
+  background: none; border: none; padding: 0; font: inherit; font-size: .85rem; color: var(--accent); white-space: nowrap;
+}
+.link-btn[hidden] { display: none; }

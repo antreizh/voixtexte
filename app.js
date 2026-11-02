@@ -5,7 +5,7 @@ const els = {
   mic: $('mic'), lang: $('lang'), status: $('status'), saved: $('saved'), title: $('title'),
   transcript: $('transcript'), final: $('final'), interim: $('interim'), placeholder: $('placeholder'),
   newRec: $('new'), copy: $('copy'), share: $('share'), download: $('download'),
-  unsupported: $('unsupported'), history: $('history'), historyDialog: $('historyDialog'),
+  unsupported: $('unsupported'), blackout: $('blackout'), unmask: $('unmask'), maskBtn: $('maskBtn'), history: $('history'), historyDialog: $('historyDialog'),
   historyList: $('historyList'), closeHistory: $('closeHistory'), stamps: $('stamps'),
 };
 
@@ -54,7 +54,8 @@ function persist() {
   recordings = recordings.filter((r) => r.segments.length || r === current);
   const ok = store.set(STORE_RECS, JSON.stringify(recordings)) && store.set(STORE_CURRENT, current.id);
   if (ok) {
-    els.saved.textContent = '✓ enregistré ' + formatTime(Date.now());
+    els.saved.textContent = '✓ ' + formatTime(Date.now());
+    els.saved.title = 'Dernière sauvegarde';
   } else {
     els.saved.textContent = '⚠ sauvegarde impossible';
   }
@@ -215,10 +216,11 @@ function createRecognition() {
         break;
       case 'no-speech':
       case 'aborted':
-        break; // relance automatique dans onend
+        return; // relance automatique dans onend
       default:
         setStatus('Erreur : ' + event.error);
     }
+    unmask(); // une erreur doit rester visible
   };
 
   r.onend = () => {
@@ -265,8 +267,39 @@ function start() {
   requestWakeLock();
 }
 
+// ---------- Écran noir pendant l'écoute ----------
+// L'écran devient noir (discret, et économe sur les écrans OLED) ; l'écoute continue
+// dessous. Un toucher sur le coin gris réaffiche l'appli.
+const themeMeta = document.querySelector('meta[name="theme-color"]');
+const themeColor = themeMeta.content;
+
+function mask() {
+  els.blackout.hidden = false;
+  els.maskBtn.hidden = true;
+  themeMeta.content = '#000000';
+  document.body.classList.add('masked');
+  const fs = document.documentElement.requestFullscreen;
+  if (fs && !document.fullscreenElement) fs.call(document.documentElement).catch(() => {});
+}
+
+function unmask() {
+  if (els.blackout.hidden) return;
+  els.blackout.hidden = true;
+  els.maskBtn.hidden = !listening;
+  themeMeta.content = themeColor;
+  document.body.classList.remove('masked');
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+}
+
+els.unmask.addEventListener('click', unmask);
+els.maskBtn.addEventListener('click', mask);
+// Une sortie du plein écran (geste système, bouton retour) réaffiche aussi l'appli.
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) unmask(); });
+
 function stop() {
   listening = false;
+  unmask();
+  els.maskBtn.hidden = true;
   clearTimeout(restartTimer);
   els.mic.setAttribute('aria-pressed', 'false');
   els.mic.setAttribute('aria-label', 'Démarrer la transcription');
@@ -345,7 +378,14 @@ els.historyDialog.addEventListener('click', (e) => {
 els.stamps.addEventListener('change', () => store.set(STORE_STAMPS, els.stamps.checked ? '1' : ''));
 
 // ---------- Actions ----------
-els.mic.addEventListener('click', () => (listening ? stop() : start()));
+els.mic.addEventListener('click', () => {
+  if (listening) return stop();
+  start();
+  if (listening) {
+    if (VTReport.settings().blackout) mask();
+    else els.maskBtn.hidden = false;
+  }
+});
 
 els.lang.addEventListener('change', () => {
   store.set(STORE_LANG, els.lang.value);

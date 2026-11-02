@@ -131,6 +131,7 @@ const VTReport = (() => {
   const DEFAULTS = {
     org: '', author: '', color: '#1F3864', logo: '', confidential: 'Document interne – diffusion restreinte',
     apiKey: '',
+    blackout: true,
   };
   function settings() {
     try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE_SETTINGS) || '{}') }; } catch { return { ...DEFAULTS }; }
@@ -667,6 +668,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
         confidential: $('sConf').value.trim(),
         logo: pendingLogo,
         apiKey: $('sKey').value.trim(),
+        blackout: $('sBlackout').checked,
       };
       if (!saveSettings(st)) { alert('Enregistrement impossible (stockage plein ?). Essayez un logo plus léger.'); return; }
       $('settingsDialog').close();
@@ -681,6 +683,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     $('sAuthor').value = st.author;
     $('sColor').value = st.color;
     $('sConf').value = st.confidential;
+    $('sBlackout').checked = st.blackout;
     $('sKey').value = st.apiKey;
     pendingLogo = st.logo;
     $('sLogoPreview').src = st.logo || '';
