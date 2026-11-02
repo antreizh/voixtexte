@@ -77,11 +77,16 @@ function joinText(a, b) {
   if (!b) return a;
   return a + ' ' + b;
 }
+// Texte d'une phrase, préfixé de son étiquette (« [Décision] … ») s'il y en a une.
+function segmentText(seg) {
+  const label = seg.kind ? VTReport.KINDS[seg.kind] : '';
+  return label ? `[${label}] ${seg.text}` : seg.text;
+}
 function recordingText(rec, withStamps = false) {
   if (withStamps) {
-    return rec.segments.map((s) => `[${formatTime(s.t)}] ${s.text}`).join('\n');
+    return rec.segments.map((s) => `[${formatTime(s.t)}] ${segmentText(s)}`).join('\n');
   }
-  return rec.segments.map((s) => s.text).join('\n');
+  return rec.segments.map(segmentText).join('\n');
 }
 function exportText() {
   return recordingText(current, els.stamps.checked).trim();
@@ -90,9 +95,22 @@ function exportText() {
 // ---------- Affichage ----------
 function render(interim = '') {
   const text = recordingText(current);
-  els.final.textContent = text;
-  els.interim.textContent = interim ? (text ? '\n' : '') + interim : '';
-  els.placeholder.hidden = Boolean(text || interim);
+  // Une ligne par phrase, avec un badge coloré pour les mots-clés reconnus.
+  els.final.replaceChildren(...current.segments.map((seg) => {
+    const line = document.createElement('div');
+    line.className = 'seg';
+    if (seg.kind) {
+      const badge = document.createElement('span');
+      badge.className = 'badge kind-' + seg.kind;
+      badge.textContent = VTReport.KINDS[seg.kind];
+      line.append(badge, ' ');
+    }
+    line.append(seg.text);
+    return line;
+  }));
+  const pending = pendingKind ? VTReport.KINDS[pendingKind] + ' : ' : '';
+  els.interim.textContent = pending + interim;
+  els.placeholder.hidden = Boolean(text || interim || pending);
   els.title.textContent = 'Enregistrement du ' + formatDate(current.start);
   els.transcript.scrollTop = els.transcript.scrollHeight;
 }
@@ -127,10 +145,21 @@ let savedIndexes = new Set(); // résultats finaux déjà sauvegardés pour la s
 let wakeLock = null;
 let restartTimer = null;
 
-function addSegment(rec, text) {
-  text = capitalize(text.trim());
+// Mot-clé prononcé seul (« Décision… » puis pause) : il s'applique à la phrase suivante.
+let pendingKind = null;
+
+function addSegment(rec, raw) {
+  const { kind, text } = VTReport.classify(raw.trim());
+  if (kind && !text) {
+    pendingKind = kind;
+    return;
+  }
   if (!text) return;
-  rec.segments.push({ t: Date.now(), text });
+  const seg = { t: Date.now(), text: capitalize(text) };
+  const finalKind = kind || pendingKind;
+  if (finalKind) seg.kind = finalKind;
+  pendingKind = null;
+  rec.segments.push(seg);
   persist();
 }
 
@@ -253,6 +282,7 @@ function switchTo(rec) {
   const wasListening = listening;
   if (wasListening) stop();
   current = rec;
+  pendingKind = null;
   persist();
   render();
   if (wasListening) setTimeout(start, 300);
@@ -392,6 +422,14 @@ if (!SpeechRecognition) {
 
 store.set(STORE_CURRENT, current.id);
 render();
+
+// Accès pour le module compte-rendu (report.js).
+window.VT = {
+  get current() { return current; },
+  persist, toast, formatDate, formatTime, segmentText, recordingText,
+  isListening: () => listening,
+};
+VTReport.init();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

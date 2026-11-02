@@ -1,5 +1,6 @@
-const CACHE = 'voixtexte-v2';
-const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'icon.svg', 'manifest.webmanifest'];
+const CACHE = 'voixtexte-v3';
+const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'report.js', 'icon.svg', 'manifest.webmanifest',
+  'vendor/docx-9.12.0.mjs', 'vendor/anthropic-sdk-0.135.0.mjs'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));

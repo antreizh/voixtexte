@@ -16,6 +16,7 @@
   <header>
     <h1>VoixTexte</h1>
     <button id="history" class="tool small" title="Enregistrements" aria-label="Enregistrements">📚</button>
+    <button id="settings" class="tool small" title="Réglages" aria-label="Réglages">⚙️</button>
     <select id="lang" aria-label="Langue">
       <option value="fr-FR">Français</option>
       <option value="en-US">English (US)</option>
@@ -45,6 +46,7 @@
     <button id="mic" class="mic" aria-label="Démarrer la transcription" aria-pressed="false">
       <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
     </button>
+    <button id="report" class="tool" title="Compte-rendu" aria-label="Compte-rendu">📝</button>
     <button id="share" class="tool" title="Partager" aria-label="Partager">📤</button>
     <button id="download" class="tool" title="Télécharger (.txt)" aria-label="Télécharger">💾</button>
   </footer>
@@ -58,6 +60,104 @@
     <ul id="historyList" class="history-list"></ul>
   </dialog>
 
+  <!-- Compte-rendu : édition -->
+  <dialog id="reportDialog" class="full">
+    <div class="dialog-head sticky">
+      <h2>📝 Compte-rendu</h2>
+      <button id="closeReport" class="tool small" aria-label="Fermer">✕</button>
+    </div>
+    <div class="r-actions">
+      <button id="rRebuild" type="button" class="btn">🔄 Actualiser depuis la dictée</button>
+      <button id="rClaude" type="button" class="btn primary">✨ Rédiger avec Claude</button>
+    </div>
+    <p id="rSource" class="r-source"></p>
+    <details class="r-help">
+      <summary>Mots-clés à dicter</summary>
+      <ul>
+        <li><b>« Point suivant : budget 2027 »</b> → nouveau point de l'ordre du jour</li>
+        <li><b>« Décision : on valide le prestataire »</b> → décision</li>
+        <li><b>« Action : Marie envoie le devis pour vendredi »</b> → action, responsable, échéance</li>
+        <li><b>« Participants : Paul, Marie et Ahmed »</b> → liste des présents</li>
+        <li><b>« Prochaine réunion : mardi 10 h »</b></li>
+      </ul>
+    </details>
+
+    <form class="r-form" onsubmit="return false">
+      <label>Titre<input id="rTitle"></label>
+      <div class="r-two">
+        <label>Date<input id="rDate" type="date"></label>
+        <label>Heure<input id="rTime" type="time"></label>
+      </div>
+      <label>Lieu / visio<input id="rLocation" placeholder="Salle, adresse ou lien"></label>
+      <label>Rédacteur<input id="rAuthor"></label>
+      <div class="r-two">
+        <label>Participants <small>(un par ligne)</small><textarea id="rParticipants" rows="2"></textarea></label>
+        <label>Excusés <small>(un par ligne)</small><textarea id="rAbsents" rows="2"></textarea></label>
+      </div>
+      <label>Synthèse<textarea id="rSummary" rows="3" placeholder="L'essentiel à retenir en quelques lignes"></textarea></label>
+
+      <h3>Points abordés</h3>
+      <div id="rPoints"></div>
+      <button id="rAddPoint" type="button" class="btn ghost">＋ Ajouter un point</button>
+
+      <label>Décisions <small>(une par ligne)</small><textarea id="rDecisions" rows="2"></textarea></label>
+
+      <h3>Plan d'actions</h3>
+      <div id="rActions"></div>
+      <button id="rAddAction" type="button" class="btn ghost">＋ Ajouter une action</button>
+
+      <label>Prochaine réunion<input id="rNext"></label>
+      <label class="opt"><input type="checkbox" id="rAnnex"> Joindre la transcription intégrale en annexe</label>
+    </form>
+
+    <div class="r-export sticky-bottom">
+      <button id="rPreview" type="button" class="btn">👁️ Aperçu</button>
+      <button id="rPdf" type="button" class="btn">📄 PDF</button>
+      <button id="rDocx" type="button" class="btn">💾 Word</button>
+      <button id="rShare" type="button" class="btn primary">📤 Partager</button>
+    </div>
+  </dialog>
+
+  <!-- Compte-rendu : aperçu du document -->
+  <dialog id="previewDialog" class="full preview">
+    <div class="dialog-head sticky">
+      <h2>Aperçu</h2>
+      <button id="closePreview" class="tool small" aria-label="Fermer">✕</button>
+    </div>
+    <div id="previewArea" class="paper"></div>
+  </dialog>
+
+  <!-- Réglages : charte et clé d'API -->
+  <dialog id="settingsDialog">
+    <div class="dialog-head">
+      <h2>⚙️ Réglages</h2>
+      <button id="closeSettings" class="tool small" type="button" aria-label="Fermer">✕</button>
+    </div>
+    <form id="settingsForm" class="r-form">
+      <h3>Charte du document</h3>
+      <label>Organisation<input id="sOrg" placeholder="Nom de l'entreprise ou du service"></label>
+      <label>Rédacteur par défaut<input id="sAuthor" placeholder="Prénom Nom, fonction"></label>
+      <div class="r-two">
+        <label>Couleur principale<input id="sColor" type="color" value="#1F3864"></label>
+        <label>Logo<input id="sLogo" type="file" accept="image/*"></label>
+      </div>
+      <div class="logo-row"><img id="sLogoPreview" alt="Logo" hidden><button id="sLogoClear" type="button" class="btn ghost">Retirer le logo</button></div>
+      <label>Mention de pied de page<input id="sConf"></label>
+
+      <h3>Rédaction par Claude (facultatif)</h3>
+      <label>Clé d'API Anthropic<input id="sKey" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
+      <p class="hint">
+        Créez une clé sur <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>
+        (facturation à l'usage, quelques centimes par réunion). La clé reste sur cet appareil.
+        Quand vous cliquez sur « Rédiger avec Claude », la transcription est envoyée à Anthropic pour être traitée.
+      </p>
+      <button type="submit" class="btn primary">Enregistrer</button>
+    </form>
+  </dialog>
+
+  <div id="printArea" class="print-only"></div>
+
+  <script src="report.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

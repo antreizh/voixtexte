@@ -17,6 +17,37 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
 - L'écran reste allumé pendant l'écoute.
 - Installable sur l'écran d'accueil, thème clair/sombre automatique.
 
+## Compte-rendu de réunion 📝
+
+Le bouton 📝 transforme la transcription en compte-rendu structuré, modifiable, puis exporté en
+document professionnel aux couleurs de votre organisation.
+
+**1. Mots-clés à dicter** (reconnus en début de phrase, affichés en badges colorés) :
+
+| Vous dites | Résultat |
+|---|---|
+| « Point suivant : budget 2027 » | nouveau point de l'ordre du jour |
+| « Décision : on valide le prestataire » | ligne du tableau des décisions |
+| « Action : Marie envoie le devis pour vendredi » | action + responsable (Marie) + échéance (vendredi) |
+| « Participants : Paul, Marie et Ahmed » | liste des présents |
+| « Prochaine réunion : mardi 10 h » | date de la prochaine réunion |
+
+Un mot-clé dit seul, suivi d'une pause, s'applique à la phrase suivante.
+
+**2. Rédaction par Claude (facultatif)** : « ✨ Rédiger avec Claude » envoie la transcription à
+l'API d'Anthropic, qui renvoie un compte-rendu rédigé (synthèse, points, décisions, actions).
+Il faut une clé d'API personnelle (⚙️ Réglages), facturée à l'usage. Elle reste stockée sur
+l'appareil. Relisez toujours le résultat avant diffusion.
+
+**3. Export** : 👁️ aperçu, 📄 PDF (via l'impression du navigateur : « Enregistrer au format PDF »),
+💾 Word (.docx modifiable) ou 📤 partage direct du fichier Word. Nom automatique :
+`CR_2026-11-02_Comite-de-pilotage.docx`.
+
+**Charte** (⚙️ Réglages) : nom de l'organisation, logo, couleur principale, rédacteur par défaut,
+mention de pied de page. Le document comprend un en-tête avec logo, un tableau d'informations,
+des sections numérotées, les tableaux des décisions et des actions, une pagination et, en option,
+la transcription intégrale en annexe.
+
 ## Utilisation sur smartphone
 
 1. Ouvrez l'adresse de l'appli (en **HTTPS**) :
@@ -27,7 +58,8 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
 
 ## Mise en ligne
 
-L'appli est 100 % statique (HTML/CSS/JS, aucun serveur ni clé d'API). Le workflow
+L'appli est 100 % statique (HTML/CSS/JS, aucun serveur). Les bibliothèques `docx` (Word) et
+`@anthropic-ai/sdk` (Claude) sont intégrées dans `vendor/` (licence MIT). Le workflow
 `.github/workflows/pages.yml` la publie sur GitHub Pages à chaque push sur `main` :
 `https://<utilisateur>.github.io/voixtexte/`. Si besoin, activez Pages dans
 **Settings → Pages → Source : GitHub Actions**.
