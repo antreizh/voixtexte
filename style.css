@@ -233,3 +233,42 @@ body.masked { overflow: hidden; }
   background: none; border: none; padding: 0; font: inherit; font-size: .85rem; color: var(--accent); white-space: nowrap;
 }
 .link-btn[hidden] { display: none; }
+
+/* ---------- Modes dictée / audio ---------- */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0 4px; }
+.mode-btn {
+  font: inherit; font-size: .85rem; padding: 8px 6px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card); color: var(--muted);
+}
+.mode-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+.mic.audio-mode { background: #d1242f; }
+.mic.audio-mode::after {
+  content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; border: 3px solid #d1242f; transform: translate(22px, 22px);
+}
+.mic { position: relative; }
+.mic.audio-mode[aria-pressed="true"]::after { border-radius: 3px; }
+
+/* ---------- Panneau du fichier son ---------- */
+.audio-panel {
+  border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+  padding: 10px 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;
+}
+.audio-panel[hidden] { display: none; }
+.audio-head { font-size: .9rem; }
+.audio-head span { color: var(--muted); }
+.audio-panel audio { width: 100%; height: 40px; }
+.audio-actions { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; }
+.audio-actions .btn { padding: 8px 12px; }
+.audio-progress .bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.audio-progress .bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+.audio-progress small { color: var(--muted); font-size: .8rem; }
+.audio-progress[hidden] { display: none; }
+
+/* ---------- Coin gauche de l'écran noir : accueil du téléphone ---------- */
+.blackout-corner.left { right: auto; left: 0; border-top-left-radius: 0; border-top-right-radius: 100%; }
+.home-hint {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0;
+  width: min(80vw, 320px); text-align: center; color: #8a8a8a; font-size: .95rem; line-height: 1.5;
+}
+.home-hint[hidden] { display: none; }

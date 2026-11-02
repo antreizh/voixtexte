@@ -51,7 +51,7 @@ let current = recordings.find((r) => r.id === store.get(STORE_CURRENT)) || recor
 
 function persist() {
   // On ne garde pas les enregistrements vides autres que celui en cours.
-  recordings = recordings.filter((r) => r.segments.length || r === current);
+  recordings = recordings.filter((r) => r.segments.length || r.audioId || r === current);
   const ok = store.set(STORE_RECS, JSON.stringify(recordings)) && store.set(STORE_CURRENT, current.id);
   if (ok) {
     els.saved.textContent = '✓ ' + formatTime(Date.now());
@@ -112,7 +112,8 @@ function render(interim = '') {
   const pending = pendingKind ? VTReport.KINDS[pendingKind] + ' : ' : '';
   els.interim.textContent = pending + interim;
   els.placeholder.hidden = Boolean(text || interim || pending);
-  els.title.textContent = 'Enregistrement du ' + formatDate(current.start);
+  els.title.textContent = (current.audioName ? '🔊 ' + current.audioName + ' — ' : 'Enregistrement du ') + formatDate(current.start);
+  if (audioApi()) audioApi().renderPanel();
   els.transcript.scrollTop = els.transcript.scrollHeight;
 }
 
@@ -135,6 +136,9 @@ function toast(msg) {
 }
 
 // ---------- Reconnaissance ----------
+// Module audio (audio.js, chargé après ce fichier).
+const audioApi = () => (typeof VTAudio !== 'undefined' ? VTAudio : null);
+
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 // Sur Chrome Android, le mode « continuous » duplique les résultats : on enchaîne
 // plutôt des sessions courtes, relancées automatiquement.
@@ -149,14 +153,14 @@ let restartTimer = null;
 // Mot-clé prononcé seul (« Décision… » puis pause) : il s'applique à la phrase suivante.
 let pendingKind = null;
 
-function addSegment(rec, raw) {
+function addSegment(rec, raw, t = Date.now()) {
   const { kind, text } = VTReport.classify(raw.trim());
   if (kind && !text) {
     pendingKind = kind;
     return;
   }
   if (!text) return;
-  const seg = { t: Date.now(), text: capitalize(text) };
+  const seg = { t, text: capitalize(text) };
   const finalKind = kind || pendingKind;
   if (finalKind) seg.kind = finalKind;
   pendingKind = null;
@@ -197,6 +201,8 @@ function createRecognition() {
   };
 
   r.onerror = (event) => {
+    // Appli en arrière-plan : le navigateur coupe la reconnaissance ; reprise au retour.
+    if (document.visibilityState === 'hidden') return;
     switch (event.error) {
       case 'not-allowed':
       case 'service-not-allowed':
@@ -225,7 +231,9 @@ function createRecognition() {
 
   r.onend = () => {
     render();
-    if (listening) {
+    if (listening && document.visibilityState === 'hidden') {
+      setStatus('En attente (appli en arrière-plan)…', true);
+    } else if (listening) {
       // Relance automatique : le navigateur coupe après un silence ou une phrase.
       clearTimeout(restartTimer);
       restartTimer = setTimeout(() => {
@@ -285,13 +293,25 @@ function mask() {
 function unmask() {
   if (els.blackout.hidden) return;
   els.blackout.hidden = true;
-  els.maskBtn.hidden = !listening;
+  els.maskBtn.hidden = !isBusy();
   themeMeta.content = themeColor;
   document.body.classList.remove('masked');
   if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
 }
 
+const isBusy = () => listening || Boolean(audioApi() && audioApi().isRecording());
 els.unmask.addEventListener('click', unmask);
+
+// Coin gauche : retour à l'écran d'accueil du téléphone sans arrêter l'enregistrement.
+// Une page web ne peut pas déclencher elle-même le bouton Accueil : on l'indique, et
+// l'enregistrement continue quand l'appli passe en arrière-plan.
+els.homeCorner = $('homeCorner');
+els.homeHint = $('homeHint');
+els.homeCorner.addEventListener('click', () => {
+  els.homeHint.hidden = false;
+  clearTimeout(els.homeHint._t);
+  els.homeHint._t = setTimeout(() => { els.homeHint.hidden = true; }, 4000);
+});
 els.maskBtn.addEventListener('click', mask);
 // Une sortie du plein écran (geste système, bouton retour) réaffiche aussi l'appli.
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) unmask(); });
@@ -324,7 +344,7 @@ function switchTo(rec) {
 // ---------- Historique ----------
 function renderHistory() {
   els.historyList.replaceChildren();
-  const list = recordings.filter((r) => r.segments.length || r === current);
+  const list = recordings.filter((r) => r.segments.length || r.audioId || r === current);
   if (!list.length) {
     const li = document.createElement('li');
     li.className = 'empty';
@@ -342,7 +362,7 @@ function renderHistory() {
     title.textContent = formatDate(rec.start);
     const preview = document.createElement('span');
     const n = rec.segments.length;
-    preview.textContent = `${n} phrase${n > 1 ? 's' : ''} — ${recordingText(rec) || '(vide)'}`;
+    preview.textContent = (rec.audioName ? `🔊 ${rec.audioName} · ` : '') + `${n} phrase${n > 1 ? 's' : ''} — ${recordingText(rec) || '(vide)'}`;
     open.append(title, preview);
     open.addEventListener('click', () => {
       els.historyDialog.close();
@@ -357,6 +377,7 @@ function renderHistory() {
     del.addEventListener('click', () => {
       if (!confirm('Supprimer l\'enregistrement du ' + formatDate(rec.start) + ' ?')) return;
       recordings = recordings.filter((r) => r !== rec);
+      if (rec.audioId && audioApi()) audioApi().remove(rec.audioId);
       if (rec === current) switchTo(recordings[0] || newRecording());
       else persist();
       renderHistory();
@@ -378,8 +399,29 @@ els.historyDialog.addEventListener('click', (e) => {
 els.stamps.addEventListener('change', () => store.set(STORE_STAMPS, els.stamps.checked ? '1' : ''));
 
 // ---------- Actions ----------
+const STORE_MODE = 'voixtexte.mode';
+let mode = store.get(STORE_MODE) === 'audio' ? 'audio' : 'text';
+function setMode(m) {
+  if (isBusy()) return toast('Arrêtez d\'abord l\'enregistrement en cours');
+  mode = m;
+  store.set(STORE_MODE, m);
+  document.querySelectorAll('.mode-btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+  els.mic.classList.toggle('audio-mode', m === 'audio');
+  els.mic.setAttribute('aria-label', m === 'audio' ? 'Démarrer l\'enregistrement audio' : 'Démarrer la transcription');
+  // La dictée a besoin de la reconnaissance vocale ; l'enregistrement audio, de MediaRecorder.
+  const ok = m === 'audio' ? Boolean(window.MediaRecorder && navigator.mediaDevices) : Boolean(SpeechRecognition);
+  els.mic.disabled = !ok;
+  els.unsupported.hidden = ok || m === 'audio';
+  if (isBusy()) return;
+  if (!ok) setStatus(m === 'audio' ? 'Enregistrement audio non pris en charge' : 'Dictée non prise en charge');
+  else setStatus(m === 'audio' ? 'Mode audio : appuyez sur le micro pour enregistrer' : 'Prêt');
+}
+document.querySelectorAll('.mode-btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
 els.mic.addEventListener('click', () => {
+  if (audioApi() && audioApi().isRecording()) return VTAudio.stop();
   if (listening) return stop();
+  if (mode === 'audio') return VTAudio.start();
   start();
   if (listening) {
     if (VTReport.settings().blackout) mask();
@@ -442,7 +484,10 @@ els.download.addEventListener('click', () => {
 
 // Le verrou d'écran est libéré quand l'appli passe en arrière-plan : on le reprend au retour.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && listening) requestWakeLock();
+  if (document.visibilityState === 'visible' && listening) {
+    requestWakeLock();
+    try { recognition.start(); } catch { /* déjà active */ }
+  }
 });
 
 // ---------- Initialisation ----------
@@ -468,8 +513,13 @@ window.VT = {
   get current() { return current; },
   persist, toast, formatDate, formatTime, segmentText, recordingText,
   isListening: () => listening,
+  get recordings() { return recordings; },
+  newRecording, switchTo, addSegment, render, setStatus, mask, unmask, requestWakeLock, releaseWakeLock,
+  lang: () => els.lang.value,
+  setMaskBtn: (show) => { els.maskBtn.hidden = !show; },
 };
 VTReport.init();
+setMode(mode);
 
 // Raccourcis de l'icône (appui long sur Android) : ?action=nouveau | compte-rendu
 (() => {

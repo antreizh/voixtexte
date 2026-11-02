@@ -21,7 +21,29 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
   (discret, et économe en batterie sur les écrans OLED) ; la transcription continue en dessous.
   Un toucher sur le **petit coin gris en bas à droite** réaffiche l'appli ; « 🌑 Masquer » la
   remasque. Désactivable dans ⚙️ Réglages.
+- **Coin gris en bas à gauche** : pour aller à l'écran d'accueil du téléphone sans arrêter
+  l'enregistrement. Une appli web ne peut pas actionner elle-même le bouton Accueil : le coin
+  rappelle le geste (bouton Accueil ou balayage vers le haut). L'enregistrement audio continue en
+  arrière-plan sur Android ; la dictée en direct se met en pause et reprend au retour dans l'appli.
 - Installable sur l'écran d'accueil, thème clair/sombre automatique.
+
+## Enregistrement audio ⏺️
+
+Choisissez **« ⏺️ Enregistrement audio »** au-dessus du texte, puis appuyez sur le micro.
+
+- Le son est sauvegardé sur l'appareil **toutes les 5 secondes** : si l'appli est fermée ou le
+  téléphone s'éteint, l'enregistrement est récupéré à la prochaine ouverture.
+- Le fichier est nommé d'après l'heure de début : **`Enr_hh:mn:ss`** (ex. `Enr_14:32:05`).
+  Exporté dans le téléphone (Téléchargements), il devient `Enr_14_32_05.webm` : le caractère
+  `:` est interdit dans les noms de fichiers, le navigateur le remplace par `_`.
+- À la fin, l'appli propose de **retranscrire** le fichier en texte (la relecture dure à peu près
+  la durée de l'enregistrement), puis de créer le **compte-rendu**. Les mots-clés (« Point
+  suivant », « Décision », « Action »…) prononcés pendant l'enregistrement sont reconnus.
+- Le fichier se réécoute, s'exporte (💾) ou se partage (📤) depuis l'enregistrement, et reste
+  dans l'historique 📚.
+
+La retranscription d'un fichier nécessite **Chrome à jour** (Android ou ordinateur). Ailleurs,
+l'enregistrement fonctionne mais pas la retranscription du fichier.
 
 ## Compte-rendu de réunion 📝
 

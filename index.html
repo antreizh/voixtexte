@@ -41,8 +41,22 @@
 
   <main>
     <div class="statusbar"><span id="status" class="status">Prêt</span><button id="maskBtn" class="link-btn" type="button" hidden>🌑 Masquer</button><span id="saved" class="saved"></span></div>
+    <div class="modes" role="group" aria-label="Mode d'enregistrement">
+      <button type="button" class="mode-btn" data-mode="text" aria-pressed="true">📝 Dictée en direct</button>
+      <button type="button" class="mode-btn" data-mode="audio" aria-pressed="false">⏺️ Enregistrement audio</button>
+    </div>
     <h2 id="title" class="rec-title"></h2>
-    <div id="transcript" class="transcript" aria-live="polite"><div id="placeholder" class="welcome"><img src="icons/icon-512.png" alt="Logo VTS" width="512" height="512"><strong>VTS</strong><span>De la voix au compte-rendu</span><p>Appuyez sur le micro pour commencer la transcription.</p></div><span id="final"></span><span id="interim"></span></div>
+    <section id="audioPanel" class="audio-panel" hidden>
+      <div class="audio-head"><strong id="audioName"></strong><span id="audioInfo"></span></div>
+      <audio id="audioPlayer" controls preload="metadata"></audio>
+      <div id="audioProgress" class="audio-progress" hidden><div class="bar"><span></span></div><small></small></div>
+      <div class="audio-actions">
+        <button id="audioTranscribe" type="button" class="btn primary">📝 Retranscrire</button>
+        <button id="audioSave" type="button" class="btn">💾 Fichier</button>
+        <button id="audioShare" type="button" class="btn">📤</button>
+      </div>
+    </section>
+    <div id="transcript" class="transcript" aria-live="polite"><div id="placeholder" class="welcome"><img src="icons/icon-512.png" alt="Logo VTS" width="512" height="512"><span>De la voix au compte-rendu</span><p>Appuyez sur le micro pour commencer la transcription.</p></div><span id="final"></span><span id="interim"></span></div>
   </main>
 
   <footer>
@@ -151,6 +165,7 @@
 
       <h3>Écoute</h3>
       <label class="opt"><input type="checkbox" id="sBlackout"> Écran noir pendant l'écoute (toucher le coin gris pour revenir)</label>
+      <label class="opt"><input type="checkbox" id="sAutoExport"> Enregistrer aussi chaque fichier son dans le téléphone (Téléchargements)</label>
 
       <h3>Rédaction par Claude (facultatif)</h3>
       <label>Clé d'API Anthropic<input id="sKey" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
@@ -163,14 +178,28 @@
     </form>
   </dialog>
 
+  <!-- Après un enregistrement audio -->
+  <dialog id="afterRecDialog">
+    <div class="dialog-head"><h2>⏺️ Enregistrement terminé</h2></div>
+    <p id="afterRecText"></p>
+    <p class="hint">La retranscription relit le fichier en temps réel : elle dure à peu près aussi longtemps que l'enregistrement. Le texte obtenu peut ensuite devenir un compte-rendu.</p>
+    <div class="r-actions">
+      <button id="afterRecLater" type="button" class="btn">Plus tard</button>
+      <button id="afterRecGo" type="button" class="btn primary">📝 Retranscrire</button>
+    </div>
+  </dialog>
+
   <div id="printArea" class="print-only"></div>
 
   <!-- Écran noir pendant l'écoute : seul le coin gris permet de revenir à l'appli -->
   <div id="blackout" class="blackout" hidden>
+    <button id="homeCorner" class="blackout-corner left" type="button" aria-label="Revenir à l'écran d'accueil du téléphone"></button>
+    <p id="homeHint" class="home-hint" hidden>Appuyez sur le bouton <b>Accueil</b> du téléphone<br>(ou balayez vers le haut).<br><br>L'enregistrement continue en arrière-plan.</p>
     <button id="unmask" class="blackout-corner" type="button" aria-label="Afficher l'application"></button>
   </div>
 
   <script src="report.js"></script>
   <script src="app.js"></script>
+  <script src="audio.js"></script>
 </body>
 </html>
