@@ -291,7 +291,6 @@ const themeColor = themeMeta.content;
 
 function mask() {
   els.blackout.hidden = false;
-  els.maskBtn.hidden = true;
   themeMeta.content = '#000000';
   document.body.classList.add('masked');
   // Pas de plein écran : Android afficherait sa bulle « balayez pour quitter le plein écran ».
@@ -300,7 +299,6 @@ function mask() {
 function unmask() {
   if (els.blackout.hidden) return;
   els.blackout.hidden = true;
-  els.maskBtn.hidden = !isBusy();
   themeMeta.content = themeColor;
   document.body.classList.remove('masked');
   if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
@@ -317,7 +315,6 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 function stop() {
   listening = false;
   unmask();
-  els.maskBtn.hidden = true;
   clearTimeout(restartTimer);
   els.mic.setAttribute('aria-pressed', 'false');
   els.mic.setAttribute('aria-label', 'Démarrer la transcription');
@@ -423,7 +420,6 @@ els.mic.addEventListener('click', () => {
   start();
   if (listening) {
     if (VTReport.settings().blackout) mask();
-    else els.maskBtn.hidden = false;
   }
 });
 
@@ -514,7 +510,7 @@ window.VT = {
   get recordings() { return recordings; },
   newRecording, switchTo, addSegment, render, setStatus, mask, unmask, requestWakeLock, releaseWakeLock,
   lang: () => els.lang.value,
-  setMaskBtn: (show) => { els.maskBtn.hidden = !show; },
+  setMaskBtn: () => {}, // bouton 🌑 toujours visible dans l'en-tête
 };
 VTReport.init();
 setMode(mode);

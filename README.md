@@ -19,8 +19,9 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
 - L'écran reste allumé pendant l'écoute.
 - **Écran noir pendant l'écoute** : dès qu'on lance la dictée, l'écran devient entièrement noir
   (discret, et économe en batterie sur les écrans OLED) ; la transcription continue en dessous.
-  Un toucher sur le **petit coin gris en bas à droite** réaffiche l'appli ; « 🌑 Masquer » la
-  remasque. Désactivable dans ⚙️ Réglages.
+  Un toucher sur le **petit coin gris en bas à droite** réaffiche l'appli. Le bouton **🌑** de
+  l'en-tête passe en écran noir à tout moment, enregistrement en cours ou non. Le passage
+  automatique au démarrage est désactivable dans ⚙️ Réglages.
 - Pour aller à l'écran d'accueil du téléphone sans arrêter l'enregistrement : bouton **Accueil**
   du téléphone (ou balayage vers le haut). L'enregistrement audio continue en arrière-plan sur
   Android ; la dictée en direct se met en pause et reprend au retour dans l'appli.

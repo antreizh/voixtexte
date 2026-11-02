@@ -21,6 +21,7 @@
   <header>
     <h1 class="brand"><img src="icons/logo-96.png" alt="" width="32" height="32">VTS</h1>
     <button id="history" class="tool small" title="Enregistrements" aria-label="Enregistrements">📚</button>
+    <button id="maskBtn" class="tool small" title="Écran noir" aria-label="Passer en écran noir">🌑</button>
     <button id="settings" class="tool small" title="Réglages" aria-label="Réglages">⚙️</button>
     <select id="lang" aria-label="Langue">
       <option value="fr-FR">Français</option>
@@ -40,7 +41,7 @@
   </div>
 
   <main>
-    <div class="statusbar"><span id="status" class="status">Prêt</span><button id="maskBtn" class="link-btn" type="button" hidden>🌑 Masquer</button><span id="saved" class="saved"></span></div>
+    <div class="statusbar"><span id="status" class="status">Prêt</span><span id="saved" class="saved"></span></div>
     <div class="modes" role="group" aria-label="Mode d'enregistrement">
       <button type="button" class="mode-btn" data-mode="text" aria-pressed="true">📝 Dictée en direct</button>
       <button type="button" class="mode-btn" data-mode="audio" aria-pressed="false">⏺️ Enregistrement audio</button>
