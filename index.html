@@ -112,7 +112,10 @@
     <div class="r-actions">
       <button id="rRebuild" type="button" class="btn">🔄 Actualiser depuis la dictée</button>
       <button id="rClaude" type="button" class="btn primary">✨ Rédiger avec Claude</button>
+      <button id="rCopyClaude" type="button" class="btn">📋 Copier pour Claude</button>
+      <button id="rPasteClaude" type="button" class="btn">📥 Coller la réponse</button>
     </div>
+    <p class="hint r-sub-hint">Sans clé API : « Copier pour Claude » envoie la transcription et la consigne vers l'appli Claude (votre abonnement) ; copiez ensuite toute la réponse de Claude puis « Coller la réponse ».</p>
     <p id="rSource" class="r-source"></p>
     <details class="r-help">
       <summary>Mots-clés à dicter</summary>
@@ -204,6 +207,17 @@
       </p>
       <button type="submit" class="btn primary">Enregistrer</button>
     </form>
+  </dialog>
+
+  <!-- Réponse de Claude collée à la main -->
+  <dialog id="pasteDialog">
+    <div class="dialog-head"><h2>📥 Réponse de Claude</h2></div>
+    <p class="hint">Collez ici toute la réponse de Claude (appui long → Coller).</p>
+    <textarea id="pasteText" class="comment-text" rows="10"></textarea>
+    <div class="r-actions">
+      <button id="pasteCancel" type="button" class="btn">Annuler</button>
+      <button id="pasteOk" type="button" class="btn primary">Importer</button>
+    </div>
   </dialog>
 
   <!-- Commentaire d'un fichier -->

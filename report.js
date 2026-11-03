@@ -307,6 +307,103 @@ Règles : ne reformule pas, ne résume pas, n'ajoute ni ne retire d'information,
     return fixing;
   }
 
+  // ---------- 2c. Sans clé API : passer par l'appli Claude (abonnement) ----------
+  // La consigne demande une réponse dans une présentation fixe, que l'on sait relire
+  // pour remplir le formulaire (et garder les exports Word/PDF à la charte).
+  function claudePrompt(rec, r) {
+    const transcript = rec.segments.map((s) => `[${VT.formatTime(s.t)}] ${VT.lineText(rec, s)}`).join('\n');
+    const ctx = [
+      `Date : ${longDate(r)}`,
+      r.location && `Lieu : ${r.location}`,
+      r.participants.length && `Participants connus : ${r.participants.join(', ')}`,
+    ].filter(Boolean).join('\n');
+    return `Rédige le compte-rendu professionnel de la réunion ci-dessous, en français, à partir de sa transcription automatique (reconnaissance vocale : erreurs de mots et ponctuation absente, à corriger d'après le contexte, sans rien inventer). Les étiquettes [Point], [Décision], [Action], [Participants], [Prochaine réunion] ont été dictées par l'orateur ; les noms de voix (« Voix 2 : ») sont attribués automatiquement et peuvent être approximatifs.
+
+Réponds UNIQUEMENT avec le compte-rendu, exactement dans cette présentation (garde les titres tels quels, laisse une rubrique vide si l'information manque) :
+
+# Titre de la réunion
+## Synthèse
+3 à 5 phrases.
+## Participants
+- Prénom Nom
+## Points abordés
+### Intitulé du point
+Ce qui a été dit, en quelques phrases.
+## Décisions
+- Une décision par ligne
+## Plan d'actions
+| Action | Responsable | Échéance |
+|---|---|---|
+| Tâche à réaliser | Nom | Date |
+## Prochaine réunion
+Date ou vide.
+
+${ctx}
+
+Transcription :
+${transcript}`;
+  }
+
+  const norm = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const stripMd = (s) => s.replace(/\*\*|__|`/g, '').trim();
+
+  // Relit la réponse de Claude ; renvoie null si elle ne ressemble pas à un compte-rendu.
+  function parseClaudeAnswer(text, base) {
+    const r = { ...base, participants: [], points: [], decisions: [], actions: [], summary: '', nextMeeting: '', source: 'claude' };
+    let section = null;
+    let point = null;
+    let found = 0;
+    const summary = [], next = [];
+    for (let raw of String(text).replace(/\r/g, '').split('\n')) {
+      const line = raw.trim();
+      if (!line || /^```/.test(line) || /^\|?\s*:?-{3,}/.test(line)) continue;
+      let m;
+      if ((m = line.match(/^#\s+(.+)/))) { r.title = stripMd(m[1]); found++; continue; }
+      if ((m = line.match(/^##\s+(.+)/))) {
+        const h = norm(m[1]);
+        section = h.startsWith('synth') ? 'summary' : h.startsWith('particip') ? 'participants'
+          : h.startsWith('point') ? 'points' : h.startsWith('decision') ? 'decisions'
+          : h.includes('action') ? 'actions' : h.startsWith('prochaine') ? 'next' : null;
+        point = null;
+        if (section) found++;
+        continue;
+      }
+      if (section === 'points' && (m = line.match(/^###\s+(?:\d+[.)]\s*)?(.+)/))) {
+        point = { title: stripMd(m[1]), content: '' };
+        r.points.push(point);
+        continue;
+      }
+      const bullet = line.replace(/^([-*•]|\d+[.)])\s+/, '');
+      switch (section) {
+        case 'summary': summary.push(stripMd(line)); break;
+        case 'participants': r.participants.push(...stripMd(bullet).split(/\s*,\s*/).filter(Boolean)); break;
+        case 'decisions': r.decisions.push(stripMd(bullet)); break;
+        case 'next': next.push(stripMd(bullet)); break;
+        case 'points':
+          if (!point) { point = { title: 'Échanges', content: '' }; r.points.push(point); }
+          point.content += (point.content ? '\n' : '') + stripMd(bullet);
+          break;
+        case 'actions': {
+          if (line.startsWith('|')) {
+            const cells = line.split('|').slice(1, -1).map((c) => stripMd(c));
+            if (!cells.length || norm(cells[0]) === 'action') break; // ligne d'en-tête
+            r.actions.push({ task: cells[0] || '', owner: cells[1] || '', due: cells[2] || '' });
+          } else {
+            const [task, owner = '', due = ''] = stripMd(bullet).split(/\s+[—–|-]\s+/);
+            r.actions.push({ task, owner, due });
+          }
+          break;
+        }
+        default: break;
+      }
+    }
+    r.summary = summary.join('\n');
+    r.nextMeeting = next.join(' ');
+    r.actions = r.actions.filter((a) => a.task && !/^tache a realiser$/.test(norm(a.task)));
+    if (!r.participants.length) r.participants = base.participants;
+    return found >= 2 ? r : null;
+  }
+
   function claudeErrorMessage(e) {
     const status = e && e.status;
     if (status === 401) return 'Clé d\'API invalide. Vérifiez-la dans les réglages ⚙️.';
@@ -631,8 +728,11 @@ Règles : ne reformule pas, ne résume pas, n'ajoute ni ne retire d'information,
     if (VT.isListening()) VT.toast('La dictée continue ; actualisez la structure à la fin.');
     ensureReport();
     renderEditor();
-    $('reportDialog').showModal();
     const st = settings();
+    // Bouton mis en avant : rédaction directe avec une clé API, sinon passage par l'appli Claude.
+    $('rClaude').classList.toggle('primary', Boolean(st.apiKey));
+    $('rCopyClaude').classList.toggle('primary', !st.apiKey);
+    $('reportDialog').showModal();
     if (st.apiKey && st.claudeAuto && report.source !== 'claude' && rec.segments.length && !VT.isListening()) {
       if (fixingCount) { VT.toast('Correction en cours, rédaction juste après…'); await fixing; }
       if ($('reportDialog').open) $('rClaude').click(); // rédaction automatique par Claude
@@ -699,6 +799,44 @@ Règles : ne reformule pas, ne résume pas, n'ajoute ni ne retire d'information,
         alert('Rédaction impossible : ' + claudeErrorMessage(err));
       }
     }));
+
+    // Sans clé API : copier la consigne + transcription vers l'appli Claude…
+    $('rCopyClaude').addEventListener('click', async () => {
+      if (!rec.segments.length) return VT.toast('La transcription est vide');
+      const text = claudePrompt(rec, report);
+      let copied = false;
+      try { await navigator.clipboard.writeText(text); copied = true; } catch { /* repli ci-dessous */ }
+      if (navigator.share) {
+        // Menu de partage du téléphone : choisir « Claude ».
+        try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      if (!copied) {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      window.open('https://claude.ai/new', '_blank', 'noopener');
+      VT.toast('Copié : collez dans Claude, puis revenez « Coller la réponse »');
+    });
+    // … puis relire sa réponse.
+    const importAnswer = (text) => {
+      const r = parseClaudeAnswer(text, report);
+      if (!r) { alert('Cette réponse ne ressemble pas au compte-rendu attendu. Copiez toute la réponse de Claude, puis réessayez.'); return false; }
+      report = r;
+      save();
+      renderEditor();
+      VT.toast('Compte-rendu importé depuis Claude');
+      return true;
+    };
+    $('rPasteClaude').addEventListener('click', async () => {
+      if (report.source === 'claude' && !confirm('Remplacer le compte-rendu actuel par la réponse de Claude ?')) return;
+      let text = '';
+      try { text = await navigator.clipboard.readText(); } catch { /* accès refusé : saisie manuelle */ }
+      if (text && parseClaudeAnswer(text, report)) { importAnswer(text); return; }
+      $('pasteText').value = '';
+      $('pasteDialog').showModal();
+    });
+    $('pasteOk').addEventListener('click', () => { if (importAnswer($('pasteText').value)) $('pasteDialog').close(); });
+    $('pasteCancel').addEventListener('click', () => $('pasteDialog').close());
 
     $('rAddPoint').addEventListener('click', () => { report.points.push({ title: '', content: '' }); save(); renderEditor(); });
     $('rAddAction').addEventListener('click', () => { report.actions.push({ task: '', owner: '', due: '' }); save(); renderEditor(); });
@@ -819,5 +957,6 @@ Règles : ne reformule pas, ne résume pas, n'ajoute ni ne retire d'information,
   }
 
   return { KINDS, classify, parseAction, buildFromSegments, toHTML, toDocx, generateWithClaude, init, settings, crName, preview,
+    claudePrompt, parseClaudeAnswer,
     autoCorrect, correctTranscript };
 })();

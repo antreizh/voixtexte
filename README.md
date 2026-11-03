@@ -90,6 +90,11 @@ l'API d'Anthropic, qui renvoie un compte-rendu rédigé (synthèse, points, déc
 Il faut une clé d'API personnelle (⚙️ Réglages), facturée à l'usage. Elle reste stockée sur
 l'appareil. Relisez toujours le résultat avant diffusion.
 
+**Sans clé API, avec votre abonnement Claude** : « 📋 Copier pour Claude » envoie la consigne et
+la transcription vers l'appli Claude (menu de partage, ou copie + ouverture de claude.ai).
+Copiez ensuite toute la réponse de Claude, revenez dans VTS et touchez « 📥 Coller la réponse » :
+le compte-rendu est rempli automatiquement, prêt pour les exports Word/PDF à votre charte.
+
 **Options Claude** (⚙️ Réglages, actives seulement quand la clé est saisie) :
 - **Corriger automatiquement la transcription** : à la fin de chaque dictée ou retranscription
   d'un fichier son, Claude corrige le texte reconnu par le téléphone (ponctuation, majuscules, mots
