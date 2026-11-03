@@ -133,6 +133,7 @@ const VTReport = (() => {
     apiKey: '',
     blackout: true,
     voices: true,
+    welcome: true,
     autoExport: true,
   };
   function settings() {
@@ -669,11 +670,13 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
         apiKey: $('sKey').value.trim(),
         blackout: $('sBlackout').checked,
         voices: $('sVoices').checked,
+        welcome: $('sWelcome').checked,
         autoExport: $('sAutoExport').checked,
       };
       if (st.voices) { try { localStorage.removeItem('voixtexte.noTrack'); } catch { /* ignoré */ } }
       if (!saveSettings(st)) { alert('Enregistrement impossible (stockage plein ?). Essayez un logo plus léger.'); return; }
       $('settingsDialog').close();
+      document.body.classList.toggle('no-welcome', !st.welcome);
       VT.toast('Réglages enregistrés');
     });
   }
@@ -687,6 +690,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     $('sConf').value = st.confidential;
     $('sBlackout').checked = st.blackout;
     $('sVoices').checked = st.voices;
+    $('sWelcome').checked = st.welcome;
     $('sAutoExport').checked = st.autoExport;
     $('sKey').value = st.apiKey;
     pendingLogo = st.logo;

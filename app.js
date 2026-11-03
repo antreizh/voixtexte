@@ -596,6 +596,7 @@ window.VT = {
   setMaskBtn: () => {}, // bouton 🌑 toujours visible dans l'en-tête
 };
 VTReport.init();
+document.body.classList.toggle('no-welcome', !VTReport.settings().welcome);
 setMode(mode);
 
 // Raccourcis de l'icône (appui long sur Android) : ?action=nouveau | compte-rendu
