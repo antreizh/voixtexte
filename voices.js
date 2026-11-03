@@ -40,6 +40,7 @@ const VTVoices = (() => {
       // Bruit de fond estimé en continu : on ne garde que les instants où quelqu'un parle.
       this.floor = rms < this.floor ? rms : this.floor * 1.003;
       if (rms < Math.max(0.008, this.floor * 2.5)) return;
+      this.voiced = (this.voiced || 0) + 1; // activité vocale détectée (contrôle de bon fonctionnement)
       const f0 = this.pitch(this.ctx.sampleRate);
       if (!f0) return;
       a.getFloatFrequencyData(this.freq);
@@ -154,5 +155,6 @@ const VTVoices = (() => {
     return new Set(rec.segments.map((s) => s.voice).filter(Boolean)).size;
   }
 
-  return { supported, open, close, voiceFor, label, count, assign, isOpen: () => Boolean(tracker) };
+  return { supported, open, close, voiceFor, label, count, assign, isOpen: () => Boolean(tracker),
+    activity: () => (tracker ? tracker.voiced || 0 : 0) };
 })();

@@ -671,6 +671,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
         voices: $('sVoices').checked,
         autoExport: $('sAutoExport').checked,
       };
+      if (st.voices) { try { localStorage.removeItem('voixtexte.noTrack'); } catch { /* ignoré */ } }
       if (!saveSettings(st)) { alert('Enregistrement impossible (stockage plein ?). Essayez un logo plus léger.'); return; }
       $('settingsDialog').close();
       VT.toast('Réglages enregistrés');

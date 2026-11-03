@@ -187,6 +187,23 @@ let savedIndexes = new Set(); // résultats finaux déjà sauvegardés pour la s
 let wakeLock = null;
 let restartTimer = null;
 let voiceTrack = null;       // piste micro partagée avec l'analyse des voix
+// Sur certains téléphones, la reconnaissance alimentée par une piste micro ne marche pas :
+// on revient alors à la dictée classique, et on s'en souvient pour ce téléphone.
+const STORE_NO_TRACK = 'voixtexte.noTrack';
+let heardSomething = false;  // la reconnaissance a renvoyé au moins un résultat
+let watchdog = null;
+
+function fallbackToClassic() {
+  if (!voiceTrack || !listening) return;
+  clearTimeout(watchdog);
+  store.set(STORE_NO_TRACK, '1');
+  VTVoices.close();
+  voiceTrack = null;
+  if (recognition) { try { recognition.abort(); } catch { /* déjà arrêtée */ } }
+  const r = recognition = createRecognition();
+  try { r.start(); } catch (e) { stop(); setStatus('Impossible de démarrer : ' + e.message); return; }
+  toast('Couleurs des voix indisponibles sur ce téléphone : dictée classique');
+}
 
 // Mot-clé prononcé seul (« Décision… » puis pause) : il s'applique à la phrase suivante.
 let pendingKind = null;
@@ -223,6 +240,7 @@ function createRecognition() {
   };
 
   r.onresult = (event) => {
+    heardSomething = true;
     let interimText = '';
     for (let i = 0; i < event.results.length; i++) {
       const res = event.results[i];
@@ -242,6 +260,7 @@ function createRecognition() {
   r.onerror = (event) => {
     // Appli en arrière-plan : le navigateur coupe la reconnaissance ; reprise au retour.
     if (document.visibilityState === 'hidden') return;
+    if (voiceTrack && event.error !== 'no-speech' && event.error !== 'aborted') return fallbackToClassic();
     switch (event.error) {
       case 'not-allowed':
       case 'service-not-allowed':
@@ -310,13 +329,26 @@ function start() {
     try {
       if (track) r.start(track); else r.start();
     } catch (e) {
+      if (track) return fallbackToClassic(); // piste refusée : dictée classique
       stop();
       setStatus('Impossible de démarrer : ' + e.message);
     }
   };
   // Distinction des voix : un seul micro pour la reconnaissance et l'analyse du son.
-  if (VTReport.settings().voices && VTVoices.supported()) {
-    VTVoices.open().then((t) => { voiceTrack = t; go(t); }, () => go(null));
+  heardSomething = false;
+  clearTimeout(watchdog);
+  if (VTReport.settings().voices && VTVoices.supported() && store.get(STORE_NO_TRACK) !== '1') {
+    VTVoices.open().then((t) => {
+      voiceTrack = t;
+      go(t);
+      // Contrôle : si l'on parle depuis 7 s sans aucun texte reconnu, on bascule.
+      const check = () => {
+        if (!listening || !voiceTrack || heardSomething) return;
+        if (VTVoices.activity() > 40) fallbackToClassic();
+        else watchdog = setTimeout(check, 3000);
+      };
+      watchdog = setTimeout(check, 7000);
+    }, () => go(null));
   } else {
     go(null);
   }
@@ -357,6 +389,7 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 
 function stop() {
   listening = false;
+  clearTimeout(watchdog);
   VTVoices.close();
   voiceTrack = null;
   unmask();
