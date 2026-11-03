@@ -405,7 +405,7 @@ const VTAudio = (() => {
     try { job.r.abort(); } catch { endJob(); }
   }
 
-  function endJob() {
+  async function endJob() {
     if (!job) return;
     const { target, error, cancelled } = job;
     clearInterval(job.timer);
@@ -422,6 +422,7 @@ const VTAudio = (() => {
     }
     const n = target.segments.length;
     VT.setStatus(cancelled ? `Retranscription arrêtée (${n} phrases)` : `✓ Retranscription terminée (${n} phrases)`);
+    if (!cancelled && n) await VTReport.autoCorrect(target); // option : correction par Claude
     if (!cancelled && n && confirm(`Retranscription terminée : ${n} phrase${n > 1 ? 's' : ''}.\n\nCréer le compte-rendu maintenant ?`)) {
       if (VT.current !== target) VT.switchTo(target);
       document.getElementById('report').click();

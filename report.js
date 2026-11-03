@@ -134,6 +134,8 @@ const VTReport = (() => {
     blackout: true,
     voices: true,
     welcome: true,
+    claudeFix: false,
+    claudeAuto: false,
     autoExport: true,
   };
   function settings() {
@@ -229,6 +231,80 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
       nextMeeting: data.nextMeeting || report.nextMeeting,
       source: 'claude',
     };
+  }
+
+  // ---------- 2b. Correction automatique de la transcription par Claude ----------
+  // Claude ne transcrit pas le son : il corrige le texte reconnu par le téléphone
+  // (ponctuation, majuscules, mots mal reconnus), phrase par phrase, sans reformuler.
+  const FIX_SCHEMA = {
+    type: 'object', additionalProperties: false, required: ['phrases'],
+    properties: {
+      phrases: {
+        type: 'array',
+        items: {
+          type: 'object', additionalProperties: false, required: ['i', 'texte'],
+          properties: { i: { type: 'integer' }, texte: { type: 'string' } },
+        },
+      },
+    },
+  };
+  const FIX_SYSTEM = `Tu corriges la transcription automatique d'une réunion, produite par une reconnaissance vocale. Pour chaque phrase numérotée, renvoie la même phrase corrigée : ponctuation, majuscules, accords, orthographe, et mots manifestement mal reconnus d'après le contexte (noms propres, termes techniques).
+Règles : ne reformule pas, ne résume pas, n'ajoute ni ne retire d'information, garde la langue d'origine. Une phrase en entrée donne exactement une phrase en sortie, avec le même numéro i. Si une phrase est déjà correcte, renvoie-la telle quelle.`;
+
+  let fixing = Promise.resolve();
+  let fixingCount = 0;
+
+  async function correctTranscript(rec) {
+    const st = settings();
+    const todo = rec.segments.map((s, i) => ({ s, i })).filter((x) => !x.s.fixed && x.s.text);
+    if (!st.apiKey || !st.claudeFix || !todo.length) return 0;
+    const { default: Anthropic } = await import('./vendor/anthropic-sdk-0.135.0.mjs');
+    const client = new Anthropic({ apiKey: st.apiKey, dangerouslyAllowBrowser: true });
+    let changed = 0;
+    // Par paquets, avec un peu de contexte précédent pour les noms propres.
+    for (let k = 0; k < todo.length; k += 120) {
+      const part = todo.slice(k, k + 120);
+      const before = rec.segments.slice(Math.max(0, part[0].i - 5), part[0].i).map((s) => s.text).join(' ');
+      const response = await client.beta.messages.create({
+        model: CLAUDE_MODEL,
+        max_tokens: 16000,
+        betas: ['server-side-fallback-2026-07-01'],
+        fallbacks: 'default',
+        output_config: { effort: 'low', format: { type: 'json_schema', schema: FIX_SCHEMA } },
+        system: FIX_SYSTEM,
+        messages: [{
+          role: 'user',
+          content: (before ? `Contexte (déjà corrigé, ne pas renvoyer) : ${before}\n\n` : '') +
+            JSON.stringify(part.map((x) => ({ i: x.i, texte: x.s.text }))),
+        }],
+      });
+      if (response.stop_reason === 'refusal' || response.stop_reason === 'max_tokens') throw new Error('réponse incomplète');
+      const block = response.content.find((b) => b.type === 'text');
+      if (!block) throw new Error('réponse vide');
+      const byIndex = new Map(JSON.parse(block.text).phrases.map((p) => [p.i, p.texte]));
+      for (const { s, i } of part) {
+        const t = (byIndex.get(i) || '').trim();
+        if (t && t !== s.text) { s.raw = s.raw || s.text; s.text = t; changed++; }
+        s.fixed = true;
+      }
+      VT.persist();
+      if (VT.current === rec) VT.render();
+    }
+    return changed;
+  }
+
+  // Lance la correction (si l'option est cochée) et affiche l'avancement.
+  function autoCorrect(rec) {
+    const st = settings();
+    if (!st.apiKey || !st.claudeFix || !rec.segments.some((s) => !s.fixed)) return fixing;
+    fixingCount++;
+    VT.setStatus('✨ Correction de la transcription par Claude…', true);
+    fixing = fixing.then(() => correctTranscript(rec)).then((n) => {
+      VT.setStatus(n ? `✓ Transcription corrigée par Claude (${n} phrase${n > 1 ? 's' : ''})` : '✓ Transcription vérifiée par Claude');
+    }, (e) => {
+      VT.setStatus('⚠ Correction par Claude impossible : ' + claudeErrorMessage(e));
+    }).finally(() => { fixingCount--; });
+    return fixing;
   }
 
   function claudeErrorMessage(e) {
@@ -551,11 +627,25 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     return row;
   }
 
-  function open() {
+  async function open() {
     if (VT.isListening()) VT.toast('La dictée continue ; actualisez la structure à la fin.');
     ensureReport();
     renderEditor();
     $('reportDialog').showModal();
+    const st = settings();
+    if (st.apiKey && st.claudeAuto && report.source !== 'claude' && rec.segments.length && !VT.isListening()) {
+      if (fixingCount) { VT.toast('Correction en cours, rédaction juste après…'); await fixing; }
+      if ($('reportDialog').open) $('rClaude').click(); // rédaction automatique par Claude
+    }
+  }
+
+  // Les options Claude ne sont utilisables qu'avec une clé d'API saisie.
+  function syncClaudeOptions() {
+    const has = Boolean($('sKey').value.trim());
+    for (const id of ['sClaudeFix', 'sClaudeAuto']) {
+      $(id).disabled = !has;
+      $(id).closest('label').classList.toggle('disabled', !has);
+    }
   }
 
   async function shareOrDownload(blob, name, share) {
@@ -648,6 +738,7 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
 
     // Réglages
     $('settings').addEventListener('click', openSettings);
+    $('sKey').addEventListener('input', syncClaudeOptions);
     $('closeSettings').addEventListener('click', () => $('settingsDialog').close());
     $('sLogo').addEventListener('change', async (e) => {
       const f = e.target.files[0];
@@ -671,6 +762,8 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
         blackout: $('sBlackout').checked,
         voices: $('sVoices').checked,
         welcome: $('sWelcome').checked,
+        claudeFix: $('sClaudeFix').checked,
+        claudeAuto: $('sClaudeAuto').checked,
         autoExport: $('sAutoExport').checked,
       };
       if (st.voices) { try { localStorage.removeItem('voixtexte.noTrack'); } catch { /* ignoré */ } }
@@ -691,6 +784,9 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     $('sBlackout').checked = st.blackout;
     $('sVoices').checked = st.voices;
     $('sWelcome').checked = st.welcome;
+    $('sClaudeFix').checked = st.claudeFix;
+    $('sClaudeAuto').checked = st.claudeAuto;
+    syncClaudeOptions();
     $('sAutoExport').checked = st.autoExport;
     $('sKey').value = st.apiKey;
     pendingLogo = st.logo;
@@ -722,5 +818,6 @@ La transcription vient d'une reconnaissance vocale : elle contient des erreurs d
     $('previewDialog').showModal();
   }
 
-  return { KINDS, classify, parseAction, buildFromSegments, toHTML, toDocx, generateWithClaude, init, settings, crName, preview };
+  return { KINDS, classify, parseAction, buildFromSegments, toHTML, toDocx, generateWithClaude, init, settings, crName, preview,
+    autoCorrect, correctTranscript };
 })();

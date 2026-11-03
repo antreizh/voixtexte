@@ -334,3 +334,4 @@ body.masked { overflow: hidden; }
   font: inherit; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--vc);
 }
 .voice-tag::after { content: " ✎"; font-weight: 400; opacity: .6; }
+.r-form label.opt.disabled { opacity: .5; }

@@ -193,8 +193,10 @@
       <label class="opt"><input type="checkbox" id="sVoices"> Distinguer les voix par couleur pendant la dictée en direct</label>
       <label class="opt"><input type="checkbox" id="sAutoExport"> Enregistrer aussi chaque fichier son dans le téléphone (Téléchargements)</label>
 
-      <h3>Rédaction par Claude (facultatif)</h3>
+      <h3>Claude (facultatif)</h3>
       <label>Clé d'API Anthropic<input id="sKey" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
+      <label class="opt"><input type="checkbox" id="sClaudeFix"> Corriger automatiquement la transcription avec Claude (ponctuation, majuscules, mots mal reconnus), à la fin de chaque dictée ou retranscription</label>
+      <label class="opt"><input type="checkbox" id="sClaudeAuto"> Rédiger automatiquement le compte-rendu avec Claude à l'ouverture de 📝</label>
       <p class="hint">
         Créez une clé sur <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>
         (facturation à l'usage, quelques centimes par réunion). La clé reste sur cet appareil.

@@ -90,6 +90,14 @@ l'API d'Anthropic, qui renvoie un compte-rendu rédigé (synthèse, points, déc
 Il faut une clé d'API personnelle (⚙️ Réglages), facturée à l'usage. Elle reste stockée sur
 l'appareil. Relisez toujours le résultat avant diffusion.
 
+**Options Claude** (⚙️ Réglages, actives seulement quand la clé est saisie) :
+- **Corriger automatiquement la transcription** : à la fin de chaque dictée ou retranscription
+  d'un fichier son, Claude corrige le texte reconnu par le téléphone (ponctuation, majuscules, mots
+  mal reconnus), phrase par phrase, sans reformuler ; heures, voix et mots-clés sont conservés.
+  Claude ne transcrit pas le son lui-même : la reconnaissance vocale reste celle du téléphone.
+- **Rédiger automatiquement le compte-rendu** à l'ouverture de 📝 (sans cliquer sur
+  « Rédiger avec Claude »).
+
 **3. Export** : 👁️ aperçu, 📄 PDF (via l'impression du navigateur : « Enregistrer au format PDF »),
 💾 Word (.docx modifiable) ou 📤 partage direct du fichier Word. Nom automatique :
 **`cr_jjmmaaaa_hhmmss`** d'après le démarrage de la source (fichier son ou dictée),

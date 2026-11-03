@@ -388,7 +388,11 @@ els.maskBtn.addEventListener('click', mask);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) unmask(); });
 
 function stop() {
+  const wasListening = listening;
+  const target = current;
   listening = false;
+  // Correction par Claude (option), une fois arrivées les dernières phrases.
+  if (wasListening) setTimeout(() => VTReport.autoCorrect(target), 1500);
   clearTimeout(watchdog);
   VTVoices.close();
   voiceTrack = null;
