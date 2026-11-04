@@ -1,4 +1,4 @@
-const CACHE = 'voixtexte-v30';
+const CACHE = 'voixtexte-v31';
 const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'report.js', 'voices.js', 'audio.js', 'files.js', 'favicon.ico', 'icons/logo-96.png', 'icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo-report.png', 'icons/maskable-192.png', 'icons/apple-touch-icon.png', 'icons/shortcut-new-96.png', 'icons/shortcut-report-96.png', 'manifest.webmanifest',
   'vendor/docx-9.12.0.mjs', 'vendor/anthropic-sdk-0.135.0.mjs'];
 
@@ -17,7 +17,9 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
+    // Toujours revalider auprès du serveur (sinon le cache du navigateur peut servir une
+    // ancienne version jusqu'à 10 min) ; hors connexion, la copie locale prend le relais.
+    fetch(e.request, new URL(e.request.url).origin === location.origin ? { cache: 'no-cache' } : {})
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copy));
