@@ -29,11 +29,14 @@ const VTFiles = (() => {
     let metas = [];
     try { metas = await VTAudio.list(); } catch { /* base indisponible */ }
     for (const m of metas) {
+      const rec = VT.recordings.find((r) => r.audioId === m.id) || null;
+      const n = rec ? rec.segments.length : 0;
       list.push({
         key: 'enr:' + m.id, type: 'enr', name: m.name, file: VTAudio.fileName(m), start: m.start,
-        detail: `Son · ${fmtDur(m.duration)} · ${fmtSize(m.size)}` + (m.recovered ? ' · récupéré' : ''),
+        detail: `Son · ${fmtDur(m.duration)} · ${fmtSize(m.size)}` + (m.recovered ? ' · récupéré' : '') +
+          (n ? ` · ✓ texte (${n} phrase${n > 1 ? 's' : ''})` : ' · non retranscrit'),
         comment: m.comment || '',
-        meta: m, rec: VT.recordings.find((r) => r.audioId === m.id) || null,
+        meta: m, rec,
       });
     }
     for (const rec of VT.recordings) {
@@ -116,6 +119,8 @@ const VTFiles = (() => {
     const n = sel.length;
     $('filesCount').textContent = n ? `${n} fichier${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''}` : 'Aucun fichier sélectionné';
     $('filesOpen').disabled = n !== 1;
+    // Retranscription : un seul fichier son à la fois.
+    $('filesTranscribe').disabled = !(n === 1 && sel[0].type === 'enr');
     $('filesShare').disabled = !n;
     $('filesDelete').disabled = !n;
     const vis = visible();
@@ -157,14 +162,8 @@ const VTFiles = (() => {
   }
 
   // ---------- Actions ----------
-  function consult() {
-    const [e] = selection();
-    if (!e) return;
-    if (e.type === 'cr') {
-      VTReport.preview(e.rec); // s'ouvre par-dessus la liste
-      return;
-    }
-    // Fichier son : on ouvre son enregistrement (lecteur, retranscription, compte-rendu).
+  // Ouvre l'enregistrement d'un fichier son (en le recréant s'il avait été supprimé).
+  function openSound(e) {
     let rec = e.rec;
     if (!rec) {
       rec = VT.newRecording();
@@ -174,7 +173,27 @@ const VTFiles = (() => {
     }
     $('historyDialog').close();
     VT.switchTo(rec);
-    setTimeout(() => { const p = $('audioPlayer'); if (p) p.scrollIntoView({ block: 'center' }); }, 300);
+    setTimeout(() => { const p = $('audioPanel'); if (p) p.scrollIntoView({ block: 'start' }); }, 300);
+  }
+
+  function consult() {
+    const [e] = selection();
+    if (!e) return;
+    if (e.type === 'cr') {
+      VTReport.preview(e.rec); // s'ouvre par-dessus la liste
+      return;
+    }
+    openSound(e); // lecteur, retranscription, compte-rendu
+  }
+
+  // Retranscrit à la demande le fichier son choisi (texte affiché au fur et à mesure).
+  function transcribeSelected() {
+    const [e] = selection();
+    if (!e || e.type !== 'enr') return;
+    if (VTAudio.isTranscribing()) return VT.toast('Une retranscription est déjà en cours');
+    if (VTAudio.isRecording() || VT.isListening()) return VT.toast('Arrêtez d\'abord l\'enregistrement en cours');
+    openSound(e);
+    VTAudio.transcribe(); // demande confirmation si le fichier a déjà un texte
   }
 
   async function toFile(e) {
@@ -265,6 +284,7 @@ const VTFiles = (() => {
     render();
   });
   $('filesOpen').addEventListener('click', consult);
+  $('filesTranscribe').addEventListener('click', transcribeSelected);
   $('filesShare').addEventListener('click', share);
   $('filesDelete').addEventListener('click', remove);
   // La fenêtre 📚 s'ouvre toujours sur l'onglet Enregistrements.

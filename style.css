@@ -300,7 +300,7 @@ body.masked { overflow: hidden; }
   padding: 10px 0 4px; margin-top: 4px; display: flex; flex-direction: column; gap: 8px;
 }
 .files-bar > span { font-size: .85rem; color: var(--muted); }
-.files-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.files-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .files-actions .btn { padding: 9px 4px; font-size: .85rem; }
 .btn.danger { color: #d1242f; border-color: color-mix(in srgb, #d1242f 40%, var(--border)); }
 
@@ -336,3 +336,4 @@ body.masked { overflow: hidden; }
 .voice-tag::after { content: " ✎"; font-weight: 400; opacity: .6; }
 .r-form label.opt.disabled { opacity: .5; }
 .r-sub-hint { margin: 6px 0 0; }
+.files-list .finfo span { white-space: normal; } /* durée, taille et état du texte visibles en entier */

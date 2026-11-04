@@ -60,6 +60,9 @@ Dans 📚, l'onglet **« 🗂️ Fichiers »** liste les fichiers son (`enr_…`
 (`cr_…`) avec leur date et leur heure, du plus récent au plus ancien, filtrables par type.
 Cochez un ou plusieurs fichiers (ou « Tout sélectionner ») puis :
 
+- **📝 Retranscrire** (un seul fichier son) : retranscription à la demande du fichier choisi ;
+  le texte s'affiche au fur et à mesure, puis l'appli propose le compte-rendu. La liste indique
+  pour chaque son s'il est déjà retranscrit (« ✓ texte ») ou non ;
 - **👁️ Consulter** (un seul fichier) : aperçu du compte-rendu, ou ouverture du son avec son lecteur ;
 - **📤 Partager** : envoi par le menu de partage du téléphone (mail, messagerie, Drive…), les
   comptes-rendus au format Word ; sans menu de partage, les fichiers sont enregistrés dans le téléphone ;
