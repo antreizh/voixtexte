@@ -95,6 +95,7 @@ const VTTranslate = (() => {
           : await viaClaude(seg.text, before);
         if (tr) {
           seg.tr = tr;
+          seg.trFrom = source(); // langue d'origine, affichée en étiquette
           VT.persist();
           if (VT.current === rec) VT.render();
         }

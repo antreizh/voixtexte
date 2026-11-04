@@ -236,8 +236,18 @@ const VTFiles = (() => {
       const t = document.createElement('span');
       t.className = 'tv-time';
       t.textContent = VT.formatTime(s.t);
-      line.append(t, ' ' + VT.lineText(rec, s));
-      if (s.tr) { const tr = document.createElement('em'); tr.textContent = '→ ' + s.tr; line.append(document.createElement('br'), tr); }
+      if (s.tr) {
+        const src = document.createElement('span'); // retranscription repérée par sa langue ; traduction en italique
+        src.className = 'tv-src';
+        if (s.trFrom) src.dataset.lang = s.trFrom.toUpperCase();
+        src.textContent = VT.lineText(rec, s);
+        const tr = document.createElement('span');
+        tr.className = 'tv-tr';
+        tr.textContent = '🇫🇷 ' + s.tr;
+        line.append(t, ' ', src, document.createElement('br'), tr);
+      } else {
+        line.append(t, ' ' + VT.lineText(rec, s));
+      }
       body.appendChild(line);
     }
     $('textOpen').onclick = () => { $('textDialog').close(); $('historyDialog').close(); VT.switchTo(rec); };

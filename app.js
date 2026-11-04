@@ -144,7 +144,17 @@ function render(interim = '') {
       badge.textContent = VTReport.KINDS[seg.kind];
       line.append(badge, ' ');
     }
-    line.append(seg.text);
+    if (seg.tr) {
+      // Phrase traduite : l'original (retranscription) passe au second plan, en italique,
+      // avec l'étiquette de sa langue ; la traduction française s'affiche en dessous.
+      const src = document.createElement('span');
+      src.className = 'seg-src';
+      if (seg.trFrom) src.dataset.lang = seg.trFrom.toUpperCase();
+      src.textContent = seg.text;
+      line.append(src);
+    } else {
+      line.append(seg.text);
+    }
     if (seg.tr) { // traduction en français, sous la phrase d'origine
       const tr = document.createElement('div');
       tr.className = 'seg-tr';

@@ -345,18 +345,27 @@ body.masked { overflow: hidden; }
 .tr-toggle { display: flex; align-items: center; gap: 6px; font-size: .85rem; margin: 4px 0 2px; color: var(--fg); }
 .tr-toggle small { color: var(--muted); }
 .tr-toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
-.seg-tr {
-  font-size: .9em; font-style: italic; color: var(--muted); margin: 2px 0 4px;
-  padding-left: 10px; border-left: 2px dotted var(--border);
+/* Retranscription (langue d'origine) : texte normal, repérée par l'étiquette de sa langue. */
+.seg-src { font-style: normal; }
+.seg-src[data-lang]::before {
+  content: attr(data-lang); font-style: normal; font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+  border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; margin-right: 6px; vertical-align: 2px;
 }
-.seg-tr::before { content: "🇫🇷 "; font-style: normal; }
+/* Traduction en français : en italique, sous la retranscription. */
+.seg-tr {
+  font-style: italic; font-size: .92em; margin: 2px 0 6px; padding-left: 10px; border-left: 3px solid var(--accent);
+}
+.seg-tr::before { font-style: normal; }
+.seg-tr::before { content: "🇫🇷 "; }
 
 /* ---------- Lecture d'un texte retranscrit ---------- */
 .text-info { margin: 8px 0; }
 .text-view { font-size: 1rem; line-height: 1.55; padding-bottom: 12px; }
 .text-view p { margin: 0 0 8px; }
 .text-view .tv-time { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
-.text-view em { color: var(--muted); font-size: .9em; }
+.text-view .tv-src { font-style: normal; }
+.text-view .tv-src::before { content: attr(data-lang); font-size: .7rem; font-weight: 700; border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; margin-right: 6px; vertical-align: 2px; }
+.text-view .tv-tr { font-style: italic; display: inline-block; margin-top: 2px; padding-left: 8px; border-left: 3px solid var(--accent); }
 #textDialog[open] { display: flex; flex-direction: column; }
 #textDialog .text-view { flex: 1; }
 .resume-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
