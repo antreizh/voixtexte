@@ -215,11 +215,41 @@ const VTFiles = (() => {
       return;
     }
     if (e.type === 'retrans') {
-      $('historyDialog').close();
-      VT.switchTo(e.rec);
+      showText(e); // fenêtre de lecture, par-dessus la liste
       return;
     }
     openSound(e); // lecteur, retranscription, compte-rendu
+  }
+
+  // Lecture d'un texte retranscrit, même partiel, avec heures (et traductions éventuelles).
+  function showText(e) {
+    const rec = e.rec;
+    $('textTitle').textContent = e.name;
+    $('textInfo').textContent = e.detail + ' · ' + fmtWhen(rec.start);
+    const body = $('textBody');
+    body.replaceChildren();
+    if (!rec.segments.length) {
+      body.textContent = 'Aucune phrase n\'a encore été retranscrite.';
+    }
+    for (const s of rec.segments) {
+      const line = document.createElement('p');
+      const t = document.createElement('span');
+      t.className = 'tv-time';
+      t.textContent = VT.formatTime(s.t);
+      line.append(t, ' ' + VT.lineText(rec, s));
+      if (s.tr) { const tr = document.createElement('em'); tr.textContent = '→ ' + s.tr; line.append(document.createElement('br'), tr); }
+      body.appendChild(line);
+    }
+    $('textOpen').onclick = () => { $('textDialog').close(); $('historyDialog').close(); VT.switchTo(rec); };
+    $('textShare').onclick = async () => {
+      const f = await toFile(e);
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        try { await navigator.share({ files: [f], title: e.name }); return; } catch (err) { if (err.name === 'AbortError') return; }
+      }
+      download([f]);
+    };
+    $('textClose').onclick = () => $('textDialog').close();
+    $('textDialog').showModal();
   }
 
   // Retranscrit à la demande le fichier son choisi (texte affiché au fur et à mesure).

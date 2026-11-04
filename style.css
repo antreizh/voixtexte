@@ -350,3 +350,12 @@ body.masked { overflow: hidden; }
   padding-left: 10px; border-left: 2px dotted var(--border);
 }
 .seg-tr::before { content: "🇫🇷 "; font-style: normal; }
+
+/* ---------- Lecture d'un texte retranscrit ---------- */
+.text-info { margin: 8px 0; }
+.text-view { font-size: 1rem; line-height: 1.55; padding-bottom: 12px; }
+.text-view p { margin: 0 0 8px; }
+.text-view .tv-time { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.text-view em { color: var(--muted); font-size: .9em; }
+#textDialog[open] { display: flex; flex-direction: column; }
+#textDialog .text-view { flex: 1; }

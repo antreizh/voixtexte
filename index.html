@@ -227,6 +227,20 @@
     </div>
   </dialog>
 
+  <!-- Lecture d'un texte retranscrit (retrans_…) -->
+  <dialog id="textDialog" class="full">
+    <div class="dialog-head sticky">
+      <h2 id="textTitle"></h2>
+      <button id="textClose" class="tool small" type="button" aria-label="Fermer">✕</button>
+    </div>
+    <p id="textInfo" class="hint text-info"></p>
+    <div id="textBody" class="text-view"></div>
+    <div class="r-actions sticky-bottom">
+      <button id="textOpen" type="button" class="btn">📂 Ouvrir l'enregistrement</button>
+      <button id="textShare" type="button" class="btn primary">📤 Partager</button>
+    </div>
+  </dialog>
+
   <!-- Commentaire d'un fichier -->
   <dialog id="commentDialog">
     <div class="dialog-head"><h2>💬 Commentaire</h2></div>

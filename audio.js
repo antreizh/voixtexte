@@ -426,7 +426,7 @@ const VTAudio = (() => {
       // Laisser au moteur le temps de rendre la dernière phrase.
       const j = job;
       setTimeout(() => {
-        if (job !== j) return;
+        if (!j || job !== j) return; // retranscription déjà terminée ou arrêtée
         j.done = true;
         try { r.stop(); } catch { endJob(); }
         setTimeout(() => { if (job === j) endJob(); }, 3000); // le moteur n'a pas confirmé : on termine
