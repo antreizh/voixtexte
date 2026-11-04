@@ -46,6 +46,7 @@
       <button type="button" class="mode-btn" data-mode="text" aria-pressed="true">📝 Dictée en direct</button>
       <button type="button" class="mode-btn" data-mode="audio" aria-pressed="false">⏺️ Enregistrement audio</button>
     </div>
+    <label class="tr-toggle"><input type="checkbox" id="trToggle"> 🌐 Traduire en français pendant la transcription <small>(langue parlée : menu en haut)</small></label>
     <h2 id="title" class="rec-title"></h2>
     <section id="audioPanel" class="audio-panel" hidden>
       <div class="audio-head"><strong id="audioName"></strong><span id="audioInfo"></span></div>
@@ -260,5 +261,6 @@
   <script src="app.js"></script>
   <script src="audio.js"></script>
   <script src="files.js"></script>
+  <script src="translate.js"></script>
 </body>
 </html>

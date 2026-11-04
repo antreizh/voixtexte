@@ -361,6 +361,7 @@ const VTAudio = (() => {
     if (target.segments.length && !confirm('Ce fichier a déjà un texte. Le remplacer par une nouvelle retranscription ?')) return;
 
     const ctx = new AudioContext(); // créé pendant le geste de l'utilisateur
+    if (typeof VTTranslate !== 'undefined') VTTranslate.prepare(); // option : traduction simultanée
     const meta = await getMeta(target.audioId);
     let buffer;
     try {

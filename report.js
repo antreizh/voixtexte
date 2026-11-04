@@ -905,7 +905,8 @@ ${transcript}`;
         autoExport: $('sAutoExport').checked,
       };
       if (st.voices) { try { localStorage.removeItem('voixtexte.noTrack'); } catch { /* ignoré */ } }
-      if (!saveSettings(st)) { alert('Enregistrement impossible (stockage plein ?). Essayez un logo plus léger.'); return; }
+      // On conserve les réglages qui ne sont pas dans cette fenêtre (ex. traduction).
+      if (!saveSettings({ ...settings(), ...st })) { alert('Enregistrement impossible (stockage plein ?). Essayez un logo plus léger.'); return; }
       $('settingsDialog').close();
       document.body.classList.toggle('no-welcome', !st.welcome);
       VT.toast('Réglages enregistrés');
@@ -956,7 +957,12 @@ ${transcript}`;
     $('previewDialog').showModal();
   }
 
-  return { KINDS, classify, parseAction, buildFromSegments, toHTML, toDocx, generateWithClaude, init, settings, crName, preview,
+  // Modifie quelques réglages sans passer par la fenêtre ⚙️.
+  function updateSettings(patch) {
+    return saveSettings({ ...settings(), ...patch });
+  }
+
+  return { updateSettings, KINDS, classify, parseAction, buildFromSegments, toHTML, toDocx, generateWithClaude, init, settings, crName, preview,
     claudePrompt, parseClaudeAnswer,
     autoCorrect, correctTranscript };
 })();

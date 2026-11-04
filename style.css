@@ -340,3 +340,13 @@ body.masked { overflow: hidden; }
 .files-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 0 4px; }
 .files-top .opt { margin: 0; }
 .files-top .btn { padding: 7px 10px; font-size: .85rem; }
+
+/* ---------- Traduction simultanée ---------- */
+.tr-toggle { display: flex; align-items: center; gap: 6px; font-size: .85rem; margin: 4px 0 2px; color: var(--fg); }
+.tr-toggle small { color: var(--muted); }
+.tr-toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.seg-tr {
+  font-size: .9em; font-style: italic; color: var(--muted); margin: 2px 0 4px;
+  padding-left: 10px; border-left: 2px dotted var(--border);
+}
+.seg-tr::before { content: "🇫🇷 "; font-style: normal; }

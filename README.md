@@ -27,6 +27,20 @@ Application web (PWA) qui **retranscrit en texte, en temps réel**, ce que capte
   Android ; la dictée en direct se met en pause et reprend au retour dans l'appli.
 - Installable sur l'écran d'accueil, thème clair/sombre automatique.
 
+## Traduction simultanée en français 🌐
+
+Choisissez la **langue parlée** dans le menu en haut (ex. *English*), puis cochez
+**« 🌐 Traduire en français pendant la transcription »** sous les modes. Chaque phrase reconnue
+(dictée en direct ou retranscription d'un fichier son) est traduite dès qu'elle arrive ; la
+traduction s'affiche en italique sous la phrase d'origine, et figure dans les exports texte.
+
+Moteur utilisé automatiquement :
+1. le **traducteur intégré à Chrome** quand il est disponible (sur l'appareil, gratuit, privé ;
+   la langue peut devoir être téléchargée une première fois) ;
+2. sinon **Claude**, si une clé API est saisie dans ⚙️ (payant à l'usage, texte envoyé à Anthropic).
+
+Sans l'un ni l'autre, la transcription continue sans traduction (un message l'indique).
+
 ## Voix en couleur 🎨
 
 Pendant la **dictée en direct**, chaque voix entendue a sa couleur, avec son nom à chaque

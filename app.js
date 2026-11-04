@@ -105,10 +105,11 @@ function lineText(rec, seg) {
   return who + segmentText(seg);
 }
 function recordingText(rec, withStamps = false) {
+  const tr = (s) => (s.tr ? '\n    → ' + s.tr : ''); // traduction en français, s'il y en a une
   if (withStamps) {
-    return rec.segments.map((s) => `[${formatTime(s.t)}] ${lineText(rec, s)}`).join('\n');
+    return rec.segments.map((s) => `[${formatTime(s.t)}] ${lineText(rec, s)}${tr(s)}`).join('\n');
   }
-  return rec.segments.map((s) => lineText(rec, s)).join('\n');
+  return rec.segments.map((s) => lineText(rec, s) + tr(s)).join('\n');
 }
 function exportText() {
   return recordingText(current, els.stamps.checked).trim();
@@ -144,6 +145,12 @@ function render(interim = '') {
       line.append(badge, ' ');
     }
     line.append(seg.text);
+    if (seg.tr) { // traduction en français, sous la phrase d'origine
+      const tr = document.createElement('div');
+      tr.className = 'seg-tr';
+      tr.textContent = seg.tr;
+      line.append(tr);
+    }
     return line;
   }));
   const pending = pendingKind ? VTReport.KINDS[pendingKind] + ' : ' : '';
@@ -222,6 +229,7 @@ function addSegment(rec, raw, t = Date.now(), voice = null) {
   pendingKind = null;
   rec.segments.push(seg);
   persist();
+  if (typeof VTTranslate !== 'undefined') VTTranslate.translate(rec, seg); // option : traduction en français
 }
 
 function createRecognition() {
@@ -337,6 +345,7 @@ function start() {
   // Distinction des voix : un seul micro pour la reconnaissance et l'analyse du son.
   heardSomething = false;
   clearTimeout(watchdog);
+  if (typeof VTTranslate !== 'undefined') VTTranslate.prepare(); // pendant le geste de l'utilisateur
   if (VTReport.settings().voices && VTVoices.supported() && store.get(STORE_NO_TRACK) !== '1') {
     VTVoices.open().then((t) => {
       voiceTrack = t;
