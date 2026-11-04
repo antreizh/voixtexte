@@ -83,6 +83,9 @@ Cochez un ou plusieurs fichiers (ou « Tout sélectionner ») puis :
   avec un message. Les fichiers importés sont sélectionnés, prêts pour « Retranscrire » ;
 - **📝 Retranscrire** (un seul fichier son) : retranscription à la demande du fichier choisi
   (pendant une retranscription, ce bouton devient « ⏹ Arrêter », comme le bouton micro) ;
+  si le fichier a déjà un texte, l'appli propose de **reprendre là où la retranscription s'est
+  arrêtée** (le texte existant est conservé, la suite s'ajoute), de **recommencer depuis le début**
+  (le texte est remplacé) ou d'annuler ;
   le texte s'affiche au fur et à mesure, puis l'appli propose le compte-rendu. La liste indique
   pour chaque son s'il est déjà retranscrit (« ✓ texte ») ou non ;
 - **👁️ Consulter** (un seul fichier) : aperçu du compte-rendu, ou ouverture du son avec son lecteur ;

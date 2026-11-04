@@ -359,3 +359,4 @@ body.masked { overflow: hidden; }
 .text-view em { color: var(--muted); font-size: .9em; }
 #textDialog[open] { display: flex; flex-direction: column; }
 #textDialog .text-view { flex: 1; }
+.resume-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }

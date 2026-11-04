@@ -358,8 +358,32 @@ const VTAudio = (() => {
       return;
     }
     if (VT.isListening() || rec) return VT.toast('Arrêtez d\'abord l\'enregistrement en cours');
-    if (target.segments.length && !confirm('Ce fichier a déjà un texte. Le remplacer par une nouvelle retranscription ?')) return;
+    if (!target.segments.length && !(target.transPos > 1)) return run(target, 0);
 
+    // Un texte existe déjà : reprendre là où la retranscription s'est arrêtée, ou recommencer.
+    const meta = await getMeta(target.audioId);
+    const dur = (meta && meta.duration) || 0;
+    const pct = target.transPct ?? (target.segments.length ? 100 : 0);
+    const last = target.segments[target.segments.length - 1];
+    // Point de reprise : fin de la dernière phrase validée (les mots non validés seront réentendus).
+    let resumeAt = last ? Math.max(0, (last.t - target.start) / 1000) : Math.max(0, (target.transPos || 0) - 1);
+    if (target.transPos != null) resumeAt = Math.min(resumeAt, target.transPos);
+    const n = target.segments.length;
+    $('resumeText').textContent = pct >= 100
+      ? `Ce fichier est déjà entièrement retranscrit (${n} phrase${n > 1 ? 's' : ''}).`
+      : `Ce fichier est retranscrit à ${pct} % (${n} phrase${n > 1 ? 's' : ''}), arrêt à ${fmtDur(resumeAt)}${dur ? ' sur ' + fmtDur(dur) : ''}.`;
+    $('resumeGo').hidden = pct >= 100;
+    $('resumeGo').textContent = `▶ Reprendre à ${fmtDur(resumeAt)}`;
+    const dlg = $('resumeDialog');
+    $('resumeGo').onclick = () => { dlg.close(); run(target, resumeAt); };
+    $('resumeRestart').onclick = () => { dlg.close(); run(target, 0); };
+    $('resumeCancel').onclick = () => dlg.close();
+    dlg.showModal();
+  }
+
+  // offset > 0 : reprise à cet endroit du fichier (secondes), en gardant le texte existant ;
+  // offset = 0 : retranscription complète, qui remplace le texte.
+  async function run(target, offset) {
     const ctx = new AudioContext(); // créé pendant le geste de l'utilisateur
     if (typeof VTTranslate !== 'undefined') VTTranslate.prepare(); // option : traduction simultanée
     const meta = await getMeta(target.audioId);
@@ -371,8 +395,11 @@ const VTAudio = (() => {
       alert('Fichier son illisible.');
       return;
     }
-    target.segments = [];
-    delete target.report;
+    if (!offset) {
+      target.segments = [];
+      delete target.report;
+      delete target.transPos;
+    }
     VT.persist();
     VT.render();
 
@@ -434,13 +461,15 @@ const VTAudio = (() => {
     };
 
     $('audioTranscribe').textContent = '⏹ Arrêter';
-    target.transPct = 0;
+    if (!offset) target.transPct = 0;
     $('mic').setAttribute('aria-pressed', 'true'); // le micro sert aussi à arrêter
     $('audioProgress').hidden = false;
     VT.requestWakeLock();
     await ctx.resume();
-    job.t0 = ctx.currentTime;
-    src.start();
+    // Reprise : on démarre la lecture à « offset » ; t0 est reculé d'autant pour que
+    // positions et heures des phrases restent celles du fichier.
+    job.t0 = ctx.currentTime - offset;
+    src.start(0, Math.min(offset, Math.max(0, buffer.duration - 0.5)));
     r.start(track);
     job.timer = setInterval(progress, 500);
     progress();
@@ -451,6 +480,7 @@ const VTAudio = (() => {
     const pos = Math.min(job.duration, job.ctx.currentTime - job.t0);
     // Pourcentage retranscrit (100 seulement à la fin), sauvegardé régulièrement.
     job.target.transPct = Math.min(99, Math.floor((100 * pos) / job.duration));
+    job.target.transPos = pos;
     if (!job.saved || Date.now() - job.saved > 5000) { job.saved = Date.now(); VT.persist(); }
     $('audioProgress').querySelector('span').style.width = (100 * pos / job.duration).toFixed(1) + '%';
     $('audioProgress').querySelector('small').textContent =
@@ -476,6 +506,7 @@ const VTAudio = (() => {
     // Pourcentage final : 100 si tout le fichier a été relu.
     const pos = Math.min(job.duration, job.ctx.currentTime - job.t0);
     target.transPct = !cancelled && !error ? 100 : Math.min(99, Math.floor((100 * pos) / job.duration));
+    target.transPos = !cancelled && !error ? job.duration : pos;
     $('mic').setAttribute('aria-pressed', 'false');
     try { job.ctx.close(); } catch { /* ignoré */ }
     job = null;
