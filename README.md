@@ -60,6 +60,12 @@ Dans 📚, l'onglet **« 🗂️ Fichiers »** liste les fichiers son (`enr_…`
 (`cr_…`) avec leur date et leur heure, du plus récent au plus ancien, filtrables par type.
 Cochez un ou plusieurs fichiers (ou « Tout sélectionner ») puis :
 
+- **📂 Importer un son** : ajoute un ou plusieurs fichiers audio choisis dans n'importe quel dossier
+  du téléphone (Téléchargements, enregistreur, WhatsApp, Drive…) : MP3, M4A/AAC, WAV, OGG/Opus,
+  WebM, FLAC… selon ce que le téléphone sait lire. Le fichier est renommé `enr_jjmmaaaa_hhmmss`
+  d'après son heure de début (heure du fichier moins sa durée ; un fichier `enr_…` exporté par VTS
+  garde son nom) ; son nom d'origine reste affiché. Fichier illisible ou déjà importé : refusé
+  avec un message. Les fichiers importés sont sélectionnés, prêts pour « Retranscrire » ;
 - **📝 Retranscrire** (un seul fichier son) : retranscription à la demande du fichier choisi ;
   le texte s'affiche au fur et à mesure, puis l'appli propose le compte-rendu. La liste indique
   pour chaque son s'il est déjà retranscrit (« ✓ texte ») ou non ;

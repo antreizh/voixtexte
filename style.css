@@ -337,3 +337,6 @@ body.masked { overflow: hidden; }
 .r-form label.opt.disabled { opacity: .5; }
 .r-sub-hint { margin: 6px 0 0; }
 .files-list .finfo span { white-space: normal; } /* durée, taille et état du texte visibles en entier */
+.files-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 0 4px; }
+.files-top .opt { margin: 0; }
+.files-top .btn { padding: 7px 10px; font-size: .85rem; }

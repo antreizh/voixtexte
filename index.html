@@ -90,7 +90,11 @@
         <button type="button" data-filter="enr" aria-pressed="false">🔊 Sons</button>
         <button type="button" data-filter="cr" aria-pressed="false">📄 Comptes-rendus</button>
       </div>
-      <label class="opt"><input type="checkbox" id="filesAll"> Tout sélectionner</label>
+      <div class="files-top">
+        <label class="opt"><input type="checkbox" id="filesAll"> Tout sélectionner</label>
+        <button id="filesImport" type="button" class="btn">📂 Importer un son</button>
+        <input id="filesImportInput" type="file" accept="audio/*,.m4a,.mp3,.wav,.ogg,.opus,.webm,.aac,.flac" multiple hidden>
+      </div>
       <ul id="filesList" class="files-list"></ul>
       <div class="files-bar">
         <span id="filesCount">Aucun fichier sélectionné</span>

@@ -16,7 +16,8 @@ const VTAudio = (() => {
     const h = Math.floor(s / 3600);
     return (h ? h + ':' + pad(Math.floor(s / 60) % 60) : Math.floor(s / 60)) + ':' + pad(s % 60);
   };
-  const fileName = (meta) => meta.name + '.' + (/mp4|m4a|aac/.test(meta.mime) ? 'm4a' : /ogg/.test(meta.mime) ? 'ogg' : 'webm');
+  const fileName = (meta) => meta.name + '.' + ((meta.source && (meta.source.match(/\.([a-z0-9]{2,4})$/i) || [])[1]) ||
+    (/mp4|m4a|aac/.test(meta.mime) ? 'm4a' : /ogg/.test(meta.mime) ? 'ogg' : /mpeg|mp3/.test(meta.mime) ? 'mp3' : /wav/.test(meta.mime) ? 'wav' : 'webm'));
 
   // ---------- Base locale (IndexedDB) ----------
   let dbp = null;
@@ -240,6 +241,51 @@ const VTAudio = (() => {
     } catch { /* IndexedDB indisponible */ }
   }
 
+  // ---------- Import d'un fichier son depuis le téléphone ----------
+  // Durée lue dans les métadonnées (sans décoder tout le fichier, trop lourd pour une longue réunion).
+  function probe(blob) {
+    return new Promise((resolve) => {
+      const a = document.createElement('audio');
+      const url = URL.createObjectURL(blob);
+      let done = false;
+      const end = (d, ok) => { if (done) return; done = true; URL.revokeObjectURL(url); resolve({ ok, duration: d }); };
+      a.preload = 'metadata';
+      a.onloadedmetadata = () => {
+        if (Number.isFinite(a.duration)) return end(a.duration, true);
+        a.ondurationchange = () => { if (Number.isFinite(a.duration)) end(a.duration, true); };
+        a.currentTime = 1e101; // WebM sans durée : on force sa lecture
+      };
+      a.onerror = () => end(0, false);
+      setTimeout(() => end(0, a.readyState > 0), 8000);
+      a.src = url;
+    });
+  }
+
+  // Ajoute un fichier son choisi par l'utilisateur ; renvoie sa fiche, ou lève une erreur lisible.
+  async function importFile(file) {
+    const { ok, duration } = await probe(file);
+    if (!ok) throw new Error(`format non lu par ce téléphone (${file.name})`);
+    const metas = await tx(['audio'], 'readonly', (t) => reqP(t.objectStore('audio').getAll()));
+    if (metas.some((m) => m.source === file.name && m.size === file.size)) throw new Error(`${file.name} est déjà importé`);
+    // Un fichier exporté par VTS (enr_jjmmaaaa_hhmmss) garde son nom et son heure de début ;
+    // sinon on prend l'heure du fichier (fin d'enregistrement en général) moins sa durée.
+    const m = file.name.match(/^enr_(\d{2})(\d{2})(\d{4})_(\d{2})(\d{2})(\d{2})/);
+    const start = m ? new Date(+m[3], m[2] - 1, +m[1], +m[4], +m[5], +m[6]).getTime()
+      : (file.lastModified || Date.now()) - Math.round(duration * 1000);
+    let name = 'enr_' + VT.formatStamp(start);
+    if (metas.some((x) => x.name === name)) name += '_' + (metas.filter((x) => x.name.startsWith(name)).length + 1);
+    const meta = {
+      id: 'a' + start.toString(36) + Math.random().toString(36).slice(2, 6),
+      name, start, mime: file.type || 'audio/mpeg', duration, size: file.size,
+      status: 'done', blob: file, imported: true, source: file.name,
+    };
+    await putMeta(meta);
+    const rec = VT.newRecording();
+    rec.start = start; rec.audioId = meta.id; rec.audioName = name;
+    VT.persist();
+    return meta;
+  }
+
   // ---------- Fichier : export / partage ----------
   function exportFile(meta, share) {
     const name = fileName(meta);
@@ -436,6 +482,7 @@ const VTAudio = (() => {
   return {
     start, stop, remove, renderPanel, transcribe, fileName,
     get: getMeta,
+    importFile,
     // Commentaire libre attaché au fichier son (300 caractères au plus).
     setComment: async (id, text) => {
       const m = await getMeta(id);

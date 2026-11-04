@@ -34,6 +34,7 @@ const VTFiles = (() => {
       list.push({
         key: 'enr:' + m.id, type: 'enr', name: m.name, file: VTAudio.fileName(m), start: m.start,
         detail: `Son · ${fmtDur(m.duration)} · ${fmtSize(m.size)}` + (m.recovered ? ' · récupéré' : '') +
+          (m.imported ? ` · importé (${m.source})` : '') +
           (n ? ` · ✓ texte (${n} phrase${n > 1 ? 's' : ''})` : ' · non retranscrit'),
         comment: m.comment || '',
         meta: m, rec,
@@ -283,6 +284,30 @@ const VTFiles = (() => {
     for (const e of visible()) { if (ev.target.checked) selected.add(e.key); else selected.delete(e.key); }
     render();
   });
+  // Import de fichiers son depuis n'importe quel dossier du téléphone.
+  $('filesImport').addEventListener('click', () => $('filesImportInput').click());
+  $('filesImportInput').addEventListener('change', async (ev) => {
+    const files = [...ev.target.files];
+    ev.target.value = ''; // permet de rechoisir le même fichier
+    if (!files.length) return;
+    const btn = $('filesImport');
+    btn.disabled = true;
+    btn.textContent = '⏳ Import…';
+    const added = [], errors = [];
+    for (const f of files) {
+      try { added.push(await VTAudio.importFile(f)); } catch (err) { errors.push(err.message); }
+    }
+    btn.disabled = false;
+    btn.textContent = '📂 Importer un son';
+    selected.clear();
+    added.forEach((m) => selected.add('enr:' + m.id)); // prêts pour « Retranscrire »
+    filter = 'all';
+    document.querySelectorAll('.file-filters button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.filter === 'all')));
+    await refresh();
+    if (added.length) VT.toast(added.length > 1 ? `${added.length} fichiers son importés` : `Importé : ${added[0].name} — touchez « Retranscrire »`);
+    if (errors.length) alert('Import impossible :\n• ' + errors.join('\n• '));
+  });
+
   $('filesOpen').addEventListener('click', consult);
   $('filesTranscribe').addEventListener('click', transcribeSelected);
   $('filesShare').addEventListener('click', share);
