@@ -544,8 +544,11 @@ const VTAudio = (() => {
       await putMeta(m);
     },
     // Fichiers son terminés, du plus récent au plus ancien.
+    // Fichiers son terminés, plus celui en cours d'enregistrement (marqué live).
     list: async () => (await tx(['audio'], 'readonly', (t) => reqP(t.objectStore('audio').getAll())))
-      .filter((m) => m.status === 'done' && m.blob).sort((a, b) => b.start - a.start),
+      .filter((m) => (m.status === 'done' && m.blob) || (rec && rec.meta.id === m.id))
+      .map((m) => (rec && rec.meta.id === m.id ? { ...m, live: true, duration: (Date.now() - rec.startMs) / 1000, size: 0 } : m))
+      .sort((a, b) => b.start - a.start),
     isRecording: () => Boolean(rec) || starting,
     isTranscribing: () => Boolean(job),
     cancelTranscription: cancel,

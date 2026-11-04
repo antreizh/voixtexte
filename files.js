@@ -35,7 +35,9 @@ const VTFiles = (() => {
       const n = rec ? rec.segments.length : 0;
       list.push({
         key: 'enr:' + m.id, type: 'enr', name: m.name, file: VTAudio.fileName(m), start: m.start,
-        detail: `Son · ${fmtDur(m.duration)} · ${fmtSize(m.size)}` + (m.recovered ? ' · récupéré' : '') +
+        live: Boolean(m.live),
+        detail: m.live ? `Son · ⏺️ enregistrement en cours (${fmtDur(m.duration)})` :
+          `Son · ${fmtDur(m.duration)} · ${fmtSize(m.size)}` + (m.recovered ? ' · récupéré' : '') +
           (m.imported ? ` · importé (${m.source})` : '') +
           (n ? ` · ✓ texte (${n} phrase${n > 1 ? 's' : ''})` : ' · non retranscrit'),
         comment: m.comment || '',
@@ -97,6 +99,7 @@ const VTFiles = (() => {
       const box = document.createElement('input');
       box.type = 'checkbox';
       box.checked = selected.has(e.key);
+      if (e.live) box.disabled = true; // fichier en cours d'enregistrement : pas encore utilisable
       box.setAttribute('aria-label', 'Sélectionner ' + e.name);
       box.addEventListener('change', () => {
         if (box.checked) selected.add(e.key); else selected.delete(e.key);
@@ -359,14 +362,21 @@ const VTFiles = (() => {
     document.querySelectorAll('#historyDialog .tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === id)));
     $('tabRecs').hidden = id !== 'tabRecs';
     $('tabFiles').hidden = id !== 'tabFiles';
-    if (id === 'tabFiles') { selected.clear(); refresh(); } // sélection vide à chaque ouverture
+    if (id === 'tabFiles') {
+      // À chaque ouverture : tous les fichiers, aucune sélection.
+      selected.clear();
+      filter = 'all';
+      document.querySelectorAll('.file-filters button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.filter === 'all')));
+      refresh();
+    }
     // Pendant une retranscription, la liste suit l'avancement (pourcentage).
     clearInterval(live);
     if (id === 'tabFiles') {
       live = setInterval(() => {
         if (!$('historyDialog').open || $('tabFiles').hidden) return clearInterval(live);
-        if (VTAudio.isTranscribing() || wasRunning) refresh();
-        wasRunning = VTAudio.isTranscribing();
+        const busy = VTAudio.isTranscribing() || VTAudio.isRecording();
+        if (busy || wasRunning) refresh();
+        wasRunning = busy;
       }, 2000);
     }
   }
