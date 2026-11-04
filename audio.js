@@ -414,17 +414,28 @@ const VTAudio = (() => {
       job.error = ev.error;
     };
     r.onend = () => {
-      if (!job) return;
+      if (!job || job.r !== r) return;
       if (job.done || job.error) return endJob();
-      try { r.start(track); } catch { /* relance */ } // le moteur coupe après un silence : on reprend
+      // Le moteur coupe après un silence : on reprend ; s'il refuse, on réessaie une fois.
+      try { r.start(track); } catch {
+        setTimeout(() => { if (job && job.r === r && !job.done) { try { r.start(track); } catch { /* fin forcée plus bas */ } } }, 400);
+      }
     };
 
     src.onended = () => {
       // Laisser au moteur le temps de rendre la dernière phrase.
-      setTimeout(() => { if (job) { job.done = true; try { r.stop(); } catch { endJob(); } } }, 2500);
+      const j = job;
+      setTimeout(() => {
+        if (job !== j) return;
+        j.done = true;
+        try { r.stop(); } catch { endJob(); }
+        setTimeout(() => { if (job === j) endJob(); }, 3000); // le moteur n'a pas confirmé : on termine
+      }, 2500);
     };
 
     $('audioTranscribe').textContent = '⏹ Arrêter';
+    target.transPct = 0;
+    $('mic').setAttribute('aria-pressed', 'true'); // le micro sert aussi à arrêter
     $('audioProgress').hidden = false;
     VT.requestWakeLock();
     await ctx.resume();
@@ -438,6 +449,9 @@ const VTAudio = (() => {
   function progress() {
     if (!job) return;
     const pos = Math.min(job.duration, job.ctx.currentTime - job.t0);
+    // Pourcentage retranscrit (100 seulement à la fin), sauvegardé régulièrement.
+    job.target.transPct = Math.min(99, Math.floor((100 * pos) / job.duration));
+    if (!job.saved || Date.now() - job.saved > 5000) { job.saved = Date.now(); VT.persist(); }
     $('audioProgress').querySelector('span').style.width = (100 * pos / job.duration).toFixed(1) + '%';
     $('audioProgress').querySelector('small').textContent =
       `Retranscription… ${fmtDur(pos)} / ${fmtDur(job.duration)} — environ ${fmtDur(job.duration - pos)} restantes. Gardez l'appli ouverte.`;
@@ -446,16 +460,23 @@ const VTAudio = (() => {
 
   function cancel() {
     if (!job) return;
-    job.cancelled = true;
-    job.done = true;
-    try { job.src.stop(); } catch { /* déjà arrêté */ }
-    try { job.r.abort(); } catch { endJob(); }
+    const j = job;
+    j.cancelled = true;
+    j.done = true;
+    try { j.src.stop(); } catch { /* déjà arrêté */ }
+    try { j.r.abort(); } catch { /* déjà arrêté */ }
+    // Si le moteur ne confirme pas l'arrêt (déjà coupé), on termine quand même.
+    setTimeout(() => { if (job === j) endJob(); }, 1200);
   }
 
   async function endJob() {
     if (!job) return;
     const { target, error, cancelled } = job;
     clearInterval(job.timer);
+    // Pourcentage final : 100 si tout le fichier a été relu.
+    const pos = Math.min(job.duration, job.ctx.currentTime - job.t0);
+    target.transPct = !cancelled && !error ? 100 : Math.min(99, Math.floor((100 * pos) / job.duration));
+    $('mic').setAttribute('aria-pressed', 'false');
     try { job.ctx.close(); } catch { /* ignoré */ }
     job = null;
     VT.releaseWakeLock();
@@ -496,5 +517,6 @@ const VTAudio = (() => {
       .filter((m) => m.status === 'done' && m.blob).sort((a, b) => b.start - a.start),
     isRecording: () => Boolean(rec) || starting,
     isTranscribing: () => Boolean(job),
+    cancelTranscription: cancel,
   };
 })();

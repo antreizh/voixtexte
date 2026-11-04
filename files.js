@@ -22,6 +22,8 @@ const VTFiles = (() => {
   let entries = [];          // fichiers affichés
   const selected = new Set(); // clés sélectionnées
   let filter = 'all';
+  let live = null;          // rafraîchissement pendant une retranscription
+  let wasRunning = false;
 
   // Rassemble les fichiers son (base locale) et les comptes-rendus (liés aux enregistrements).
   async function load() {
@@ -40,6 +42,20 @@ const VTFiles = (() => {
         meta: m, rec,
       });
     }
+    // Textes retranscrits : retrans_n_jjmmaa_hhmmss (n = % du son retranscrit ; 100 pour une dictée).
+    for (const rec of VT.recordings) {
+      const busy = VTAudio.isTranscribing() && VT.current === rec && rec.audioId;
+      if (!rec.segments.length && !busy && rec.transPct == null) continue;
+      const pct = rec.audioId ? Math.max(0, Math.min(100, rec.transPct ?? (rec.segments.length ? 100 : 0))) : 100;
+      const name = transName(rec, pct);
+      const n = rec.segments.length;
+      list.push({
+        key: 'retrans:' + rec.id, type: 'retrans', name, file: name + '.txt', start: rec.start,
+        detail: `Texte · ${n} phrase${n > 1 ? 's' : ''} · ` +
+          (rec.audioId ? (busy ? `retranscription en cours (${pct} %)` : `${pct} % du son ${rec.audioName || ''} retranscrit`) : 'dictée en direct'),
+        comment: rec.transComment || '', rec,
+      });
+    }
     for (const rec of VT.recordings) {
       if (!rec.report) continue;
       const name = VTReport.crName(rec);
@@ -50,8 +66,16 @@ const VTFiles = (() => {
       });
     }
     // Du plus récent au plus ancien ; pour une même source, le son avant son compte-rendu.
-    entries = list.sort((a, b) => b.start - a.start || (a.type === 'enr' ? -1 : 1));
+    const order = { enr: 0, retrans: 1, cr: 2 };
+    entries = list.sort((a, b) => b.start - a.start || order[a.type] - order[b.type]);
     for (const k of [...selected]) if (!entries.some((e) => e.key === k)) selected.delete(k);
+  }
+
+  // retrans_n_jjmmaa_hhmmss (année sur deux chiffres)
+  function transName(rec, pct) {
+    const d = new Date(rec.start);
+    return `retrans_${pct}_${pad(d.getDate())}${pad(d.getMonth() + 1)}${String(d.getFullYear()).slice(-2)}_` +
+      `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
   }
 
   const visible = () => entries.filter((e) => filter === 'all' || e.type === filter);
@@ -81,7 +105,7 @@ const VTFiles = (() => {
       });
       const icon = document.createElement('span');
       icon.className = 'ficon';
-      icon.textContent = e.type === 'enr' ? '🔊' : '📄';
+      icon.textContent = e.type === 'enr' ? '🔊' : e.type === 'retrans' ? '📝' : '📄';
       const info = document.createElement('span');
       info.className = 'finfo';
       const name = document.createElement('strong');
@@ -121,7 +145,10 @@ const VTFiles = (() => {
     $('filesCount').textContent = n ? `${n} fichier${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''}` : 'Aucun fichier sélectionné';
     $('filesOpen').disabled = n !== 1;
     // Retranscription : un seul fichier son à la fois.
-    $('filesTranscribe').disabled = !(n === 1 && sel[0].type === 'enr');
+    // Pendant une retranscription, le bouton sert à l'arrêter.
+    const running = VTAudio.isTranscribing();
+    $('filesTranscribe').textContent = running ? '⏹ Arrêter la retranscription' : '📝 Retranscrire';
+    $('filesTranscribe').disabled = !running && !(n === 1 && sel[0].type === 'enr');
     $('filesShare').disabled = !n;
     $('filesDelete').disabled = !n;
     const vis = visible();
@@ -149,6 +176,9 @@ const VTFiles = (() => {
       const text = ta.value.trim().slice(0, MAX);
       if (e.type === 'enr') {
         await VTAudio.setComment(e.meta.id, text);
+      } else if (e.type === 'retrans') {
+        e.rec.transComment = text;
+        VT.persist();
       } else {
         e.rec.report.comment = text;
         VT.persist();
@@ -184,14 +214,24 @@ const VTFiles = (() => {
       VTReport.preview(e.rec); // s'ouvre par-dessus la liste
       return;
     }
+    if (e.type === 'retrans') {
+      $('historyDialog').close();
+      VT.switchTo(e.rec);
+      return;
+    }
     openSound(e); // lecteur, retranscription, compte-rendu
   }
 
   // Retranscrit à la demande le fichier son choisi (texte affiché au fur et à mesure).
   function transcribeSelected() {
     const [e] = selection();
+    if (VTAudio.isTranscribing()) {
+      VTAudio.cancelTranscription();
+      VT.toast('Retranscription arrêtée');
+      setTimeout(refresh, 1500);
+      return;
+    }
     if (!e || e.type !== 'enr') return;
-    if (VTAudio.isTranscribing()) return VT.toast('Une retranscription est déjà en cours');
     if (VTAudio.isRecording() || VT.isListening()) return VT.toast('Arrêtez d\'abord l\'enregistrement en cours');
     openSound(e);
     VTAudio.transcribe(); // demande confirmation si le fichier a déjà un texte
@@ -199,6 +239,9 @@ const VTFiles = (() => {
 
   async function toFile(e) {
     if (e.type === 'enr') return new File([e.meta.blob], e.file, { type: e.meta.blob.type || e.meta.mime });
+    if (e.type === 'retrans') {
+      return new File([VT.recordingText(e.rec, $('stamps').checked) + '\n'], e.file, { type: 'text/plain;charset=utf-8' });
+    }
     const blob = await VTReport.toDocx(e.rec.report, e.rec);
     return new File([blob], e.file, { type: blob.type });
   }
@@ -253,6 +296,11 @@ const VTFiles = (() => {
       if (e.type === 'enr') {
         await VTAudio.remove(e.meta.id);
         if (rec) { delete rec.audioId; delete rec.audioName; }
+      } else if (e.type === 'retrans' && rec) {
+        if (VTAudio.isTranscribing() && VT.current === rec) VTAudio.cancelTranscription();
+        rec.segments = [];
+        delete rec.transPct;
+        delete rec.transComment;
       } else if (rec) {
         delete rec.report;
       }
@@ -272,6 +320,15 @@ const VTFiles = (() => {
     $('tabRecs').hidden = id !== 'tabRecs';
     $('tabFiles').hidden = id !== 'tabFiles';
     if (id === 'tabFiles') { selected.clear(); refresh(); } // sélection vide à chaque ouverture
+    // Pendant une retranscription, la liste suit l'avancement (pourcentage).
+    clearInterval(live);
+    if (id === 'tabFiles') {
+      live = setInterval(() => {
+        if (!$('historyDialog').open || $('tabFiles').hidden) return clearInterval(live);
+        if (VTAudio.isTranscribing() || wasRunning) refresh();
+        wasRunning = VTAudio.isTranscribing();
+      }, 2000);
+    }
   }
 
   document.querySelectorAll('#historyDialog .tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));

@@ -510,6 +510,7 @@ function setMode(m) {
 document.querySelectorAll('.mode-btn').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
 els.mic.addEventListener('click', () => {
+  if (audioApi() && audioApi().isTranscribing()) return VTAudio.cancelTranscription(); // arrêt de la retranscription
   if (audioApi() && audioApi().isRecording()) return VTAudio.stop();
   if (listening) return stop();
   if (mode === 'audio') return VTAudio.start();

@@ -102,7 +102,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   display: block; color: var(--muted); font-size: .85rem;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.history-list li.current .open strong::after { content: " · en cours"; color: var(--accent); font-weight: 400; }
+.history-list li.current .open strong::after { content: " · affiché"; color: var(--accent); font-weight: 400; }
 .history-list .empty { color: var(--muted); border: none; }
 
 /* ---------- Badges des mots-clés ---------- */

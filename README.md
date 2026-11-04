@@ -70,8 +70,9 @@ l'enregistrement fonctionne mais pas la retranscription du fichier.
 
 ## Fichiers 🗂️
 
-Dans 📚, l'onglet **« 🗂️ Fichiers »** liste les fichiers son (`enr_…`) et les comptes-rendus
-(`cr_…`) avec leur date et leur heure, du plus récent au plus ancien, filtrables par type.
+Dans 📚, l'onglet **« 🗂️ Fichiers »** liste les fichiers son (`enr_…`), les textes retranscrits
+(`retrans_n_jjmmaa_hhmmss`, où **n** est le pourcentage du son retranscrit, de 0 à 100 ; 100 pour
+une dictée en direct) et les comptes-rendus (`cr_…`) avec leur date et leur heure, du plus récent au plus ancien, filtrables par type.
 Cochez un ou plusieurs fichiers (ou « Tout sélectionner ») puis :
 
 - **📂 Importer un son** : ajoute un ou plusieurs fichiers audio choisis dans n'importe quel dossier
@@ -80,7 +81,8 @@ Cochez un ou plusieurs fichiers (ou « Tout sélectionner ») puis :
   d'après son heure de début (heure du fichier moins sa durée ; un fichier `enr_…` exporté par VTS
   garde son nom) ; son nom d'origine reste affiché. Fichier illisible ou déjà importé : refusé
   avec un message. Les fichiers importés sont sélectionnés, prêts pour « Retranscrire » ;
-- **📝 Retranscrire** (un seul fichier son) : retranscription à la demande du fichier choisi ;
+- **📝 Retranscrire** (un seul fichier son) : retranscription à la demande du fichier choisi
+  (pendant une retranscription, ce bouton devient « ⏹ Arrêter », comme le bouton micro) ;
   le texte s'affiche au fur et à mesure, puis l'appli propose le compte-rendu. La liste indique
   pour chaque son s'il est déjà retranscrit (« ✓ texte ») ou non ;
 - **👁️ Consulter** (un seul fichier) : aperçu du compte-rendu, ou ouverture du son avec son lecteur ;
