@@ -51,6 +51,16 @@ L'analyse est faite sur le téléphone, à partir de la hauteur et du timbre de 
 C'est une **estimation** : fiable entre voix nettement différentes (voix grave / voix aiguë),
 elle peut confondre deux voix proches. Désactivable dans ⚙️ Réglages. Nécessite Chrome à jour.
 
+## Son de la dictée en direct 🎙️
+
+Par défaut, la **dictée en direct enregistre aussi le son** : à l'arrêt, on obtient à la fois le
+texte (`retrans_100_…`) et le fichier son (`enr_…`), pour réécouter ou retranscrire à nouveau.
+Un seul micro est utilisé pour la reconnaissance, l'analyse des voix et l'enregistrement.
+Chaque dictée relancée sur un enregistrement qui a déjà un son démarre un nouvel enregistrement.
+Option dans ⚙️ (« Enregistrer aussi le son pendant la dictée en direct »). Sur un téléphone où
+la dictée doit passer en mode classique, le son n'est pas enregistré (un message l'indique) :
+utilisez alors le mode « Enregistrement audio ».
+
 ## Enregistrement audio ⏺️
 
 Choisissez **« ⏺️ Enregistrement audio »** au-dessus du texte, puis appuyez sur le micro.

@@ -204,22 +204,33 @@ let savedIndexes = new Set(); // résultats finaux déjà sauvegardés pour la s
 let wakeLock = null;
 let restartTimer = null;
 let voiceTrack = null;       // piste micro partagée avec l'analyse des voix
+let micStream = null;        // flux micro ouvert pour la dictée (reconnaissance + analyse + son)
+let soundWarned = false;
 // Sur certains téléphones, la reconnaissance alimentée par une piste micro ne marche pas :
 // on revient alors à la dictée classique, et on s'en souvient pour ce téléphone.
 const STORE_NO_TRACK = 'voixtexte.noTrack';
 let heardSomething = false;  // la reconnaissance a renvoyé au moins un résultat
 let watchdog = null;
 
+// Arrête l'enregistrement du son de la dictée puis libère le micro partagé.
+function releaseMic(discard = false) {
+  const ms = micStream;
+  micStream = null;
+  const done = audioApi() ? audioApi().stopSide(discard) : Promise.resolve();
+  done.finally(() => { if (ms) ms.getTracks().forEach((t) => t.stop()); });
+}
+
 function fallbackToClassic() {
   if (!voiceTrack || !listening) return;
   clearTimeout(watchdog);
   store.set(STORE_NO_TRACK, '1');
   VTVoices.close();
+  releaseMic(true); // la dictée classique n'enregistre pas le son : fragment abandonné
   voiceTrack = null;
   if (recognition) { try { recognition.abort(); } catch { /* déjà arrêtée */ } }
   const r = recognition = createRecognition();
   try { r.start(); } catch (e) { stop(); setStatus('Impossible de démarrer : ' + e.message); return; }
-  toast('Couleurs des voix indisponibles sur ce téléphone : dictée classique');
+  toast('Dictée classique sur ce téléphone (sans couleurs des voix ni enregistrement du son)');
 }
 
 // Mot-clé prononcé seul (« Décision… » puis pause) : il s'applique à la phrase suivante.
@@ -336,6 +347,11 @@ function releaseWakeLock() {
 
 function start() {
   if (!SpeechRecognition || listening) return;
+  const st = VTReport.settings();
+  const trackOk = VTVoices.supported() && store.get(STORE_NO_TRACK) !== '1';
+  const wantSound = st.recordDictation !== false && Boolean(audioApi());
+  // Un fichier son par enregistrement : si celui-ci en a déjà un, on en commence un nouveau.
+  if (wantSound && trackOk && current.audioId) switchTo(newRecording());
   listening = true;
   // Enregistrement encore vide : son heure de début est celle du démarrage de la dictée.
   if (!current.segments.length && !current.audioId) { current.start = Date.now(); persist(); }
@@ -356,9 +372,16 @@ function start() {
   heardSomething = false;
   clearTimeout(watchdog);
   if (typeof VTTranslate !== 'undefined') VTTranslate.prepare(); // pendant le geste de l'utilisateur
-  if (VTReport.settings().voices && VTVoices.supported() && store.get(STORE_NO_TRACK) !== '1') {
-    VTVoices.open().then((t) => {
+  if ((st.voices || wantSound) && trackOk) {
+    // Un seul micro pour tout : reconnaissance (piste), analyse des voix et enregistrement du son.
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }).then(async (stream) => {
+      if (!listening || recognition !== r) { stream.getTracks().forEach((t) => t.stop()); return; }
+      micStream = stream;
+      const t = stream.getAudioTracks()[0];
       voiceTrack = t;
+      await VTVoices.attach(stream);
+      if (wantSound) await audioApi().recordWith(stream, current).catch(() => toast('Enregistrement du son impossible'));
+      if (!listening || recognition !== r) return;
       go(t);
       // Contrôle : si l'on parle depuis 7 s sans aucun texte reconnu, on bascule.
       const check = () => {
@@ -369,6 +392,10 @@ function start() {
       watchdog = setTimeout(check, 7000);
     }, () => go(null));
   } else {
+    if (wantSound && !trackOk && !soundWarned) {
+      soundWarned = true;
+      toast('Son non enregistré pendant la dictée sur ce téléphone : utilisez le mode Enregistrement audio');
+    }
     go(null);
   }
   els.mic.setAttribute('aria-pressed', 'true');
@@ -414,6 +441,7 @@ function stop() {
   if (wasListening) setTimeout(() => VTReport.autoCorrect(target), 1500);
   clearTimeout(watchdog);
   VTVoices.close();
+  releaseMic();
   voiceTrack = null;
   unmask();
   clearTimeout(restartTimer);

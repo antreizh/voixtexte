@@ -1,4 +1,4 @@
-const CACHE = 'voixtexte-v37';
+const CACHE = 'voixtexte-v38';
 const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'report.js', 'voices.js', 'audio.js', 'files.js', 'translate.js', 'favicon.ico', 'icons/logo-96.png', 'icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo-report.png', 'icons/maskable-192.png', 'icons/apple-touch-icon.png', 'icons/shortcut-new-96.png', 'icons/shortcut-report-96.png', 'manifest.webmanifest',
   'vendor/docx-9.12.0.mjs', 'vendor/anthropic-sdk-0.135.0.mjs'];
 

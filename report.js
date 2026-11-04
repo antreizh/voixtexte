@@ -133,6 +133,7 @@ const VTReport = (() => {
     apiKey: '',
     blackout: true,
     voices: true,
+    recordDictation: true,
     welcome: true,
     claudeFix: false,
     claudeAuto: false,
@@ -899,6 +900,7 @@ ${transcript}`;
         apiKey: $('sKey').value.trim(),
         blackout: $('sBlackout').checked,
         voices: $('sVoices').checked,
+        recordDictation: $('sRecordDictation').checked,
         welcome: $('sWelcome').checked,
         claudeFix: $('sClaudeFix').checked,
         claudeAuto: $('sClaudeAuto').checked,
@@ -922,6 +924,7 @@ ${transcript}`;
     $('sConf').value = st.confidential;
     $('sBlackout').checked = st.blackout;
     $('sVoices').checked = st.voices;
+    $('sRecordDictation').checked = st.recordDictation;
     $('sWelcome').checked = st.welcome;
     $('sClaudeFix').checked = st.claudeFix;
     $('sClaudeAuto').checked = st.claudeAuto;

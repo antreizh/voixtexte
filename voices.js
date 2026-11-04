@@ -18,8 +18,9 @@ const VTVoices = (() => {
 
   // ---------- Analyse du son ----------
   class Tracker {
-    constructor(stream) {
+    constructor(stream, owns = true) {
       this.stream = stream;
+      this.owns = owns; // flux ouvert par ce module (sinon : partagé, fermé par son propriétaire)
       this.ctx = new AudioContext();
       this.analyser = this.ctx.createAnalyser();
       this.analyser.fftSize = 2048;
@@ -83,7 +84,7 @@ const VTVoices = (() => {
 
     close() {
       clearInterval(this.timer);
-      this.stream.getTracks().forEach((t) => t.stop());
+      if (this.owns) this.stream.getTracks().forEach((t) => t.stop());
       this.ctx.close().catch(() => {});
     }
   }
@@ -135,6 +136,13 @@ const VTVoices = (() => {
     return stream.getAudioTracks()[0];
   }
 
+  // Analyse d'un flux micro déjà ouvert (partagé avec la dictée et l'enregistrement du son).
+  async function attach(stream) {
+    close();
+    tracker = new Tracker(stream, false);
+    await tracker.ctx.resume().catch(() => {});
+  }
+
   function close() {
     if (tracker) { tracker.close(); tracker = null; }
   }
@@ -142,7 +150,9 @@ const VTVoices = (() => {
   // Voix de la phrase qui vient d'être reconnue.
   function voiceFor(rec) {
     if (!tracker) return null;
-    return assign(rec, tracker.take());
+    const frames = tracker.take(); // toujours vidé, même si les couleurs sont désactivées
+    if (!VTReport.settings().voices) return null;
+    return assign(rec, frames);
   }
 
   // Nom affiché d'une voix (renommable par l'utilisateur).
@@ -155,6 +165,6 @@ const VTVoices = (() => {
     return new Set(rec.segments.map((s) => s.voice).filter(Boolean)).size;
   }
 
-  return { supported, open, close, voiceFor, label, count, assign, isOpen: () => Boolean(tracker),
+  return { supported, open, attach, close, voiceFor, label, count, assign, isOpen: () => Boolean(tracker),
     activity: () => (tracker ? tracker.voiced || 0 : 0) };
 })();

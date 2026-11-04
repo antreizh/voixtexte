@@ -241,6 +241,77 @@ const VTAudio = (() => {
     } catch { /* IndexedDB indisponible */ }
   }
 
+  // ---------- Son enregistré pendant la dictée en direct ----------
+  // Le flux micro est ouvert par la dictée (un seul micro, sans conflit sur Android) ;
+  // on l'enregistre en parallèle, avec la même sauvegarde par morceaux de 5 s.
+  let side = null;
+
+  async function recordWith(stream, target) {
+    if (side) await stopSide();
+    const startMs = Date.now();
+    const mime = pickMime();
+    const meta = {
+      id: 'a' + startMs.toString(36),
+      name: 'enr_' + VT.formatStamp(startMs),
+      start: startMs, mime: mime || 'audio/webm', duration: 0, size: 0, status: 'recording', dictation: true,
+    };
+    await putMeta(meta);
+    if (!stream.active) { await remove(meta.id); return; } // dictée déjà arrêtée entre-temps
+    target.audioId = meta.id;
+    target.audioName = meta.name;
+    VT.persist();
+    let mr;
+    try { mr = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 48000 } : undefined); } catch { mr = new MediaRecorder(stream); }
+    meta.mime = mr.mimeType || meta.mime;
+    const chunks = [];
+    let idx = 0;
+    mr.ondataavailable = (e) => {
+      if (!e.data || !e.data.size) return;
+      chunks.push(e.data);
+      addChunk(meta.id, idx++, e.data).catch(() => {});
+    };
+    const s = side = { mr, meta, chunks, target, startMs };
+    s.done = new Promise((resolve) => { s.resolve = resolve; });
+    mr.onstop = () => finishSide(s);
+    mr.onerror = () => { try { mr.stop(); } catch { finishSide(s); } };
+    mr.start(5000);
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  }
+
+  // discard : abandonner le son (ex. bascule en dictée classique, qui n'enregistre pas le son).
+  function stopSide(discard = false) {
+    const s = side;
+    if (!s) return Promise.resolve();
+    s.discard = discard;
+    if (s.mr.state === 'inactive') finishSide(s); else { try { s.mr.stop(); } catch { finishSide(s); } }
+    return s.done;
+  }
+
+  async function finishSide(s) {
+    if (s.finished) return;
+    s.finished = true;
+    if (side === s) side = null;
+    const { meta } = s;
+    if (s.discard) {
+      await remove(meta.id);
+      if (s.target.audioId === meta.id) { delete s.target.audioId; delete s.target.audioName; VT.persist(); }
+      s.resolve();
+      return;
+    }
+    meta.duration = (Date.now() - s.startMs) / 1000;
+    meta.blob = new Blob(s.chunks, { type: meta.mime });
+    meta.size = meta.blob.size;
+    meta.status = 'done';
+    try {
+      await putMeta(meta);
+      await takeChunks(meta.id);
+      if (VTReport.settings().autoExport) exportFile(meta, false);
+    } catch { exportFile(meta, false); } // sauvegarde impossible : on exporte pour ne rien perdre
+    shownId = null;
+    if (VT.current === s.target) VT.render();
+    s.resolve();
+  }
+
   // ---------- Import d'un fichier son depuis le téléphone ----------
   // Durée lue dans les métadonnées (sans décoder tout le fichier, trop lourd pour une longue réunion).
   function probe(blob) {
@@ -535,6 +606,8 @@ const VTAudio = (() => {
   return {
     start, stop, remove, renderPanel, transcribe, fileName,
     get: getMeta,
+    recordWith, stopSide,
+    isRecordingDictation: () => Boolean(side),
     importFile,
     // Commentaire libre attaché au fichier son (300 caractères au plus).
     setComment: async (id, text) => {
@@ -546,8 +619,11 @@ const VTAudio = (() => {
     // Fichiers son terminés, du plus récent au plus ancien.
     // Fichiers son terminés, plus celui en cours d'enregistrement (marqué live).
     list: async () => (await tx(['audio'], 'readonly', (t) => reqP(t.objectStore('audio').getAll())))
-      .filter((m) => (m.status === 'done' && m.blob) || (rec && rec.meta.id === m.id))
-      .map((m) => (rec && rec.meta.id === m.id ? { ...m, live: true, duration: (Date.now() - rec.startMs) / 1000, size: 0 } : m))
+      .filter((m) => (m.status === 'done' && m.blob) || (rec && rec.meta.id === m.id) || (side && side.meta.id === m.id))
+      .map((m) => {
+        const live = (rec && rec.meta.id === m.id && rec) || (side && side.meta.id === m.id && side);
+        return live ? { ...m, live: true, duration: (Date.now() - live.startMs) / 1000, size: 0 } : m;
+      })
       .sort((a, b) => b.start - a.start),
     isRecording: () => Boolean(rec) || starting,
     isTranscribing: () => Boolean(job),
